@@ -1,0 +1,3589 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude-ассистент за 3 дня · Материалы практикума</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --card: #141414;
+    --card2: #1A1A1A;
+    --border: #242424;
+    --pink: #FF2D6E;
+    --pink-dim: rgba(255,45,110,0.12);
+    --yellow: #F5E642;
+    --yellow-dim: rgba(245,230,66,0.1);
+    --white: #FFFFFF;
+    --grey: #6B6B6B;
+    --grey2: #9A9A9A;
+    --green: #22C55E;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Golos Text', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Noise overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  .wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    padding: 40px 0 0;
+  }
+
+  .badge {
+    display: inline-block;
+    background: var(--pink);
+    color: white;
+    font-family: 'Unbounded', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 3px;
+    margin-bottom: 20px;
+  }
+
+  .hero-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(28px, 6vw, 48px);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+
+  .hero-title span { color: var(--pink); }
+
+  .hero-sub {
+    color: var(--grey2);
+    font-size: 15px;
+    max-width: 560px;
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+
+  .hero-divider {
+    height: 1px;
+    background: var(--border);
+    margin-bottom: 40px;
+  }
+
+  /* ─── NAV TABS ─── */
+  .nav {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 40px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+
+  .nav-tab {
+    flex-shrink: 0;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-family: 'Unbounded', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--grey);
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .nav-tab:hover { border-color: var(--grey); color: var(--white); }
+  .nav-tab.active { background: var(--pink); border-color: var(--pink); color: white; }
+  .nav-tab.locked { opacity: 0.4; cursor: default; }
+
+  /* ─── SECTION LABEL ─── */
+  .section-label {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--pink);
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(20px, 4vw, 28px);
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+
+  .section-desc {
+    color: var(--grey2);
+    font-size: 14px;
+    margin-bottom: 32px;
+    max-width: 520px;
+  }
+
+  /* ─── ALERT BOX ─── */
+  .alert {
+    background: rgba(245,230,66,0.07);
+    border: 1px solid rgba(245,230,66,0.25);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 28px;
+    font-size: 13.5px;
+    color: var(--yellow);
+    line-height: 1.6;
+  }
+  .alert strong { font-weight: 600; }
+
+  /* ─── STEP CARDS ─── */
+  .steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 40px; }
+
+  .step-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 16px;
+    transition: border-color 0.2s;
+  }
+
+  .step-card:hover { border-color: #333; }
+  .step-card.rf-only { border-left: 3px solid var(--pink); }
+
+  .step-num {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--pink);
+    line-height: 1;
+    padding-top: 2px;
+  }
+
+  .step-rf {
+    font-size: 9px;
+    color: var(--grey);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+    font-family: 'Unbounded', sans-serif;
+  }
+
+  .step-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+
+  .step-body { color: var(--grey2); font-size: 13.5px; line-height: 1.7; }
+
+  .step-body ul { list-style: none; padding: 0; }
+  .step-body li { padding: 2px 0; }
+  .step-body li::before { content: '→ '; color: var(--pink); font-weight: 600; }
+
+  .step-body .sub-list { list-style: none; padding-left: 20px; margin: 4px 0; }
+  .step-body .sub-list li::before { content: '• '; color: var(--grey); }
+
+  .step-body .group-label {
+    color: var(--white);
+    font-size: 12.5px;
+    font-weight: 600;
+    margin: 10px 0 4px;
+    display: block;
+  }
+
+  .step-tip {
+    background: rgba(245,230,66,0.07);
+    border: 1px solid rgba(245,230,66,0.2);
+    border-radius: 7px;
+    padding: 9px 14px;
+    margin-top: 12px;
+    font-size: 12.5px;
+    color: var(--yellow);
+  }
+
+  /* links */
+  a { color: var(--pink); text-decoration: none; border-bottom: 1px solid rgba(255,45,110,0.3); transition: border-color 0.15s; }
+  a:hover { border-color: var(--pink); }
+
+  /* ─── TARIFF TABLE ─── */
+  .tariff-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 14px;
+    font-size: 13.5px;
+  }
+  .tariff-table th {
+    text-align: left;
+    padding: 8px 12px;
+    background: #1E1E1E;
+    color: var(--grey2);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .tariff-table th:first-child { border-radius: 7px 0 0 7px; }
+  .tariff-table th:last-child { border-radius: 0 7px 7px 0; }
+  .tariff-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--grey2);
+    vertical-align: top;
+  }
+  .tariff-table tr:last-child td { border-bottom: none; }
+  .tariff-table .plan { font-family: 'Unbounded', sans-serif; font-size: 12px; font-weight: 700; color: var(--white); }
+  .tariff-table .price { font-weight: 600; color: var(--white); white-space: nowrap; }
+  .tariff-badge {
+    display: inline-block;
+    background: var(--pink-dim);
+    color: var(--pink);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-left: 8px;
+    font-family: 'Unbounded', sans-serif;
+  }
+
+  /* ─── CHECKLIST ─── */
+  .checklist-section { margin-bottom: 40px; }
+
+  .checklist {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .checklist-item:last-child { border-bottom: none; }
+  .checklist-item:hover { background: rgba(255,255,255,0.02); }
+
+  .check-box {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 5px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .checklist-item.done .check-box {
+    background: var(--green);
+    border-color: var(--green);
+  }
+
+  .check-icon { display: none; width: 11px; height: 11px; }
+  .check-icon path { fill: white; }
+  .checklist-item.done .check-icon { display: block; }
+
+  .check-text { font-size: 14px; line-height: 1.5; color: var(--grey2); }
+  .checklist-item.done .check-text { color: var(--grey); text-decoration: line-through; }
+
+  .progress-bar-wrap {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 16px 0 8px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--green);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+  .progress-text {
+    font-size: 12px;
+    color: var(--grey);
+    margin-bottom: 20px;
+  }
+  .progress-text span { color: var(--green); font-weight: 600; }
+
+
+  /* ─── LESSONS ─── */
+  .lessons { display: flex; flex-direction: column; gap: 16px; }
+
+  .lesson-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    transition: border-color 0.2s;
+  }
+  .lesson-card:hover { border-color: #333; }
+
+  .lesson-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .lesson-num {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--pink);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .lesson-duration {
+    font-size: 11px;
+    color: var(--grey);
+    background: var(--card2);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .lesson-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+  .lesson-desc {
+    font-size: 13px;
+    color: var(--grey2);
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  .video-placeholder {
+    background: #0F0F0F;
+    border: 1px dashed #2A2A2A;
+    border-radius: 10px;
+    aspect-ratio: 16/9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+    overflow: hidden;
+  }
+  .video-placeholder iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 10px;
+  }
+  .vp-inner {
+    text-align: center;
+  }
+  .vp-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--grey);
+    margin: 0 auto 10px;
+  }
+  .vp-text {
+    font-size: 12px;
+    color: var(--grey);
+  }
+
+  /* ─── SECTION DIVIDER ─── */
+  .section-block { margin-bottom: 56px; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 28px 0 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--grey);
+    font-size: 13px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  footer a { color: var(--grey); border-color: transparent; }
+  footer a:hover { color: var(--white); }
+
+  /* ─── COMING SOON ─── */
+  .coming-soon {
+    background: var(--card);
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    padding: 40px 24px;
+    text-align: center;
+    color: var(--grey);
+    font-size: 14px;
+  }
+  .coming-soon .cs-icon { font-size: 32px; margin-bottom: 12px; }
+  .coming-soon strong { color: var(--grey2); display: block; margin-bottom: 6px; font-size: 15px; }
+
+  /* page sections */
+  .day-section { display: none; }
+  .day-section.active { display: block; }
+
+  @media (max-width: 540px) {
+    .step-card { grid-template-columns: 40px 1fr; gap: 12px; padding: 16px; }
+    .step-num { font-size: 20px; }
+    header { padding: 28px 0 0; }
+  }
+
+
+
+  .card2-box {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+  }
+
+  /* ─── DOWNLOAD BUTTON ─── */
+  .download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--pink-dim);
+    border: 1px solid var(--pink);
+    color: var(--pink);
+    font-family: 'Unbounded', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 10px 18px;
+    border-radius: 7px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s;
+    margin-top: 12px;
+  }
+  .download-btn:hover { background: rgba(255,45,110,0.2); border-color: var(--pink); }
+  .download-btn svg { flex-shrink: 0; }
+
+  /* ─── COPY BLOCKS ─── */
+  .copy-block {
+    background: #0D0D0D;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .copy-label {
+    font-size: 10px;
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--grey);
+    padding: 8px 14px 4px;
+  }
+  .copy-pre {
+    font-family: 'Golos Text', monospace;
+    font-size: 12.5px;
+    color: var(--grey2);
+    line-height: 1.7;
+    padding: 6px 14px 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+    background: transparent;
+  }
+  .copy-btn {
+    display: block;
+    width: 100%;
+    padding: 9px 14px;
+    background: #1A1A1A;
+    border: none;
+    border-top: 1px solid var(--border);
+    color: var(--pink);
+    font-family: 'Unbounded', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .copy-btn:hover { background: #222; }
+  .copy-btn.copied { color: var(--green); }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="badge">Практикум · Материалы</div>
+    <h1 class="hero-title">Claude-ассистент<br><span>за 3 дня</span></h1>
+    <p class="hero-sub">Все материалы, инструкции и домашние задания. Выполни подготовку до первого эфира — сразу начнём работать.</p>
+    <div class="hero-divider"></div>
+  </header>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a class="nav-tab active" onclick="showDay('day0', this)">День 0 · Подготовка</a>
+    <a class="nav-tab" onclick="showDay('day1', this)">День 1</a>
+    <a class="nav-tab" onclick="showDay('day2', this)">День 2</a>
+    <a class="nav-tab" onclick="showDay('day3', this)">День 3</a>
+  </nav>
+
+  <!-- ═══ ДЕНЬ 0 ═══ -->
+  <div id="day0" class="day-section active">
+
+    <!-- ALERT -->
+    <div class="alert">
+      <strong>⚠️ Если ты из России</strong> — начни с Шагов 1–2 прямо сейчас. На настройку VPN и карты может уйти 1–2 дня. Остальным — сразу к Шагу 3.
+    </div>
+
+    <!-- CLAUDE SETUP -->
+    <div class="section-block">
+      <div class="section-label">Часть 1 · Claude</div>
+      <h2 class="section-title">Настрой Claude</h2>
+      <p class="section-desc">Пройди шаги по порядку. Вся часть занимает ~30 минут.</p>
+
+      <div class="steps">
+
+        <!-- 01 -->
+        <div class="step-card rf-only">
+          <div>
+            <div class="step-num">01</div>
+            <div class="step-rf">только РФ</div>
+          </div>
+          <div>
+            <div class="step-title">Настрой VPN (обходчик)</div>
+            <div class="step-body">
+              <ul>
+                <li>Скачай платный VPN: <a href="https://pay.amnezia.org/" target="_blank">pay.amnezia.org</a></li>
+                <li>Выбери сервер: Финляндия или Германия</li>
+                <li>Используй один и тот же сервер постоянно — не прыгай между странами</li>
+                <li>Бесплатный VPN не подходит — блокируют по IP</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- 02 -->
+        <div class="step-card rf-only">
+          <div>
+            <div class="step-num">02</div>
+            <div class="step-rf">только РФ</div>
+          </div>
+          <div>
+            <div class="step-title">Подготовь карту для оплаты</div>
+            <div class="step-body">
+              <span class="group-label">Выбери любой вариант:</span>
+              <ul>
+                <li>Озон Банк — выпуск в приложении Ozon, работает для Claude (<a href="https://gogov.ru/news/927763" target="_blank">инструкция по оплате</a>)</li>
+                <li>Сбербанк — пополнение Apple ID через Сбер Онлайн (<a href="https://appleinsider.ru/tips-tricks/kak-popolnit-apple-id-cherez-sberbank-onlajn.html" target="_blank">инструкция</a>)</li>
+                <li><a href="https://t.me/WantToPayBot?start=w17851188--PRF0O" target="_blank">WantToPayBot</a> — виртуальная карта для зарубежных сервисов</li>
+              </ul>
+              <span class="group-label">Оплата зарубежных сервисов через посредников в Telegram:</span>
+              <ul class="sub-list">
+                <li><a href="https://t.me/Oplati_online" target="_blank">@Oplati_online</a></li>
+                <li><a href="https://t.me/OplataZabugor" target="_blank">@OplataZabugor</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- 03 -->
+        <div class="step-card">
+          <div><div class="step-num">03</div></div>
+          <div>
+            <div class="step-title">Создай отдельный Gmail</div>
+            <div class="step-body">
+              <ul>
+                <li>Используй свою старую почту либо создай новый аккаунт специально</li>
+                <li>Этот Gmail — рабочий инструмент агента, держи его отдельно</li>
+                <li>Аккаунт должен выглядеть живым (не созданный вчера)</li>
+                <li>Готовые аккаунты можно купить: <a href="https://ggsel.net/catalog/gmail" target="_blank">ggsel.net/catalog/gmail</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- 04 -->
+        <div class="step-card">
+          <div><div class="step-num">04</div></div>
+          <div>
+            <div class="step-title">Зарегистрируйся на claude.ai</div>
+            <div class="step-body">
+              <ul>
+                <li>Включи VPN (Финляндия или Германия)</li>
+                <li>Перейди на <a href="https://claude.ai" target="_blank">claude.ai</a></li>
+                <li>Нажми «Continue with Google» — войди через новый Gmail</li>
+                <li>Подтверди номер телефона через SMS</li>
+              </ul>
+              <span class="group-label">Одноразовые номера (только для подтверждения):</span>
+              <ul class="sub-list">
+                <li><a href="https://hero-sms.com" target="_blank">hero-sms.com</a> — одноразовый номер для SMS</li>
+                <li><a href="https://grizzlysms.com" target="_blank">grizzlysms.com</a> — виртуальные номера</li>
+              </ul>
+              <ul style="margin-top:8px">
+                <li>После регистрации не торопись оплачивать — сначала Шаг 5</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- 05 -->
+        <div class="step-card">
+          <div><div class="step-num">05</div></div>
+          <div>
+            <div class="step-title">Выбери тариф и оплати</div>
+            <div class="step-body">
+              <table class="tariff-table">
+                <thead>
+                  <tr><th>Тариф</th><th>Цена</th><th>Что даёт</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="plan">Pro</span> <span class="tariff-badge">нужен</span></td>
+                    <td><span class="price">$20/мес</span></td>
+                    <td>Claude в браузере, Projects, Claude Code Cowork</td>
+                  </tr>
+                  <tr>
+                    <td><span class="plan">Max</span></td>
+                    <td><span class="price">$100/мес</span></td>
+                    <td>Claude Code в терминале, максимальные лимиты, приоритет</td>
+                  </tr>
+                </tbody>
+              </table>
+              <span class="group-label">Оплата через App Store (надёжнее всего):</span>
+              <ul>
+                <li>Смени страну App Store на Казахстан — <a href="https://t-j.ru/apple-region/" target="_blank">инструкция</a></li>
+                <li>Привяжи карту (Озон / WantToPayBot)</li>
+                <li>Скачай «Claude by Anthropic» из App Store</li>
+                <li>Оплати подписку Pro прямо через App Store</li>
+              </ul>
+              <div class="step-tip">⚡ Через Apple аккаунты блокируют значительно реже — Apple выступает посредником. Не оплачивай напрямую картой без App Store.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 06 -->
+        <div class="step-card">
+          <div><div class="step-num">06</div></div>
+          <div>
+            <div class="step-title">Проверь, что всё работает</div>
+            <div class="step-body">
+              <ul>
+                <li>Зайди на <a href="https://claude.ai" target="_blank">claude.ai</a> с включённым VPN</li>
+                <li>Убедись, что можешь писать сообщения</li>
+                <li>Settings → Billing — должно быть «Pro»</li>
+                <li>Готово ✓</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CHATPLACE SETUP -->
+    <div class="section-block">
+      <div class="section-label">Часть 2 · Chatplace</div>
+      <h2 class="section-title">Подключи Telegram-бота</h2>
+      <p class="section-desc">Займёт ~15 минут. Понадобится любой Telegram-аккаунт.</p>
+
+      <div class="steps">
+
+        <div class="step-card">
+          <div><div class="step-num">01</div></div>
+          <div>
+            <div class="step-title">Зарегистрируйся в Chatplace</div>
+            <div class="step-body">
+              <ul>
+                <li>Переходи по ссылке: <a href="https://chatplace.io/ru/?r=019b682d-3b52-73f1-9ad3-31d2293a3243" target="_blank">chatplace.io</a></li>
+                <li>Регистрируйся — это бесплатно</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">02</div></div>
+          <div>
+            <div class="step-title">Создай Telegram-бота через @BotFather</div>
+            <div class="step-body">
+              <ul>
+                <li>Открой Telegram и найди <a href="https://t.me/BotFather" target="_blank">@BotFather</a></li>
+                <li>Отправь команду <code>/newbot</code></li>
+                <li>Придумай имя бота и юзернейм (должен заканчиваться на <code>_bot</code>)</li>
+                <li>Скопируй токен — он понадобится на следующем шаге</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">03</div></div>
+          <div>
+            <div class="step-title">Подключи бота к Chatplace</div>
+            <div class="step-body">
+              <ul>
+                <li>В Chatplace: Боты → Добавить бота → Telegram</li>
+                <li>Вставь токен от @BotFather</li>
+                <li>Нажми «Подключить»</li>
+                <li>Настрой имя и аватар бота (по желанию)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- LESSONS -->
+    <div class="section-block">
+      <div class="section-label">Уроки · День 0</div>
+      <h2 class="section-title">Видео-инструкции</h2>
+      <p class="section-desc">Посмотри перед первым эфиром — покрывают всё, что нужно настроить.</p>
+
+      <div class="lessons">
+
+        <div class="lesson-card">
+          <div class="lesson-meta">
+            <span class="lesson-num">Урок 1</span>
+            <span class="lesson-duration">~15 мин</span>
+          </div>
+          <div class="lesson-title">Регистрация в Claude из России</div>
+          <div class="lesson-desc">VPN, Gmail, номер телефона, карта, оплата подписки — пошагово с экрана.</div>
+          <div class="video-placeholder">
+            <iframe src="https://www.youtube.com/embed/O9m6Va8ZONI" allowfullscreen></iframe>
+          </div>
+        </div>
+
+        <div class="lesson-card">
+          <div class="lesson-meta">
+            <span class="lesson-num">Урок 2</span>
+            <span class="lesson-duration">~15 мин</span>
+          </div>
+          <div class="lesson-title">Регистрация в Chatplace + подключение Telegram-бота</div>
+          <div class="lesson-desc">Создаём бота через @BotFather, подключаем к Chatplace, базовая настройка.</div>
+          <div class="video-placeholder">
+            <iframe src="https://www.youtube.com/embed/gwFh3eYmxk0" allowfullscreen></iframe>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CHECKLIST -->
+    <div class="checklist-section">
+      <div class="section-label">Чеклист</div>
+      <h2 class="section-title">Готов к Дню 1?</h2>
+      <p class="section-desc">Отмечай выполненные пункты. Всё это нужно сделать до первого эфира.</p>
+
+      <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+      <div class="progress-text"><span id="progressText">0 из 5</span> выполнено</div>
+
+      <div class="checklist" id="checklist">
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box">
+            <svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg>
+          </div>
+          <div class="check-text">Зарегистрирован в Claude, подписка Pro подключена</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box">
+            <svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg>
+          </div>
+          <div class="check-text">Зарегистрирован в Chatplace, Telegram-бот подключён</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box">
+            <svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg>
+          </div>
+          <div class="check-text">Описание моей ниши написано (1 абзац)</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box">
+            <svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg>
+          </div>
+          <div class="check-text">Описание целевой аудитории написано (1 абзац)</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box">
+            <svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg>
+          </div>
+          <div class="check-text">Подобраны 3 примера постов, которые нравятся (свои или чужие)</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /day0 -->
+
+  <!-- ═══ ДЕНЬ 1 ═══ -->
+  <div id="day1" class="day-section">
+
+    <div class="section-block">
+      <div class="section-label">День 1 · 120 минут</div>
+      <h2 class="section-title">Claude для контента</h2>
+      <p class="section-desc">Результат урока: настроенный кабинет + Project под нишу + готовый пост + карусель + сценарий рилса.</p>
+    </div>
+
+    <!-- ЗАПИСЬ -->
+    <div class="section-block">
+      <div class="section-label">Уроки · День 1</div>
+      <h2 class="section-title" style="font-size:20px">Запись эфира</h2>
+      <div class="lessons">
+        <div class="lesson-card">
+          <div class="lesson-meta">
+            <span class="lesson-num">День 1</span>
+            <span class="lesson-duration">~120 мин</span>
+          </div>
+          <div class="lesson-title">Claude для контента — полный эфир</div>
+          <div class="lesson-desc">Настройка кабинета, создание Projects, скиллы, демо написания постов и каруселей в реальном времени.</div>
+          <div class="video-placeholder">
+            <iframe src="https://www.youtube.com/embed/1mWyLz-EExE" allowfullscreen></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- БЛОК 1: Настройка кабинета -->
+    <div class="section-block">
+      <div class="section-label">Блок 1 · 10 минут · Делаем в самом начале</div>
+      <h2 class="section-title" style="font-size:20px">Настройка кабинета Claude</h2>
+      <p class="section-desc">Один раз — и забываешь. Без этого часть инструментов не работает.</p>
+
+      <div class="steps">
+
+        <div class="step-card">
+          <div><div class="step-num">01</div></div>
+          <div>
+            <div class="step-title">Instructions for Claude</div>
+            <div class="step-body">
+              <ul>
+                <li>Settings → Your Profile → Instructions for Claude</li>
+                <li>Вставь шаблон ниже, замени поля в скобках на свои данные</li>
+              </ul>
+              <div class="copy-block">
+                <div class="copy-label">Шаблон — Instructions for Claude</div>
+                <pre class="copy-pre">Меня зовут [ИМЯ]. Я [ниша] — [одна строка что делаю].
+Веду [Telegram / Instagram] @[handle] ([N] подписчиков).
+Мой продукт: [что продаю].
+Моя аудитория: [кто они — одна строка].
+
+КАК СО МНОЙ РАБОТАТЬ:
+— Отвечай без вводных слов, сразу к сути
+— Давай конкретные рекомендации, не «это зависит от...»
+— Критикуй если в идее есть слабые места
+— Пиши на русском если я пишу на русском
+
+ЧЕГО НЕ ДЕЛАТЬ:
+— Не начинай с «Отличный вопрос!», «Конечно!»
+— Не добавляй дисклеймеры без необходимости</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">02</div></div>
+          <div>
+            <div class="step-title">Capabilities — включить три галочки</div>
+            <div class="step-body">
+              <ul>
+                <li>Settings → Capabilities</li>
+                <li>✅ Enable web search — Claude ищет актуальную инфу</li>
+                <li>✅ Code execution and file creation — без этого carousel-design не рисует PNG</li>
+                <li>✅ Allow network egress — нужно для скиллов</li>
+              </ul>
+              <div class="step-tip">⚠️ Если Code execution выключено — карусели сегодня не сгенерируются. Включай все три прямо сейчас.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">03</div></div>
+          <div>
+            <div class="step-title">Проверка — убедись что всё работает</div>
+            <div class="step-body">
+              <div class="copy-block">
+                <div class="copy-label">Тест — вставь в новый чат (не в Project)</div>
+                <pre class="copy-pre">Напиши простой Python-скрипт и запусти его прямо здесь</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+              <ul style="margin-top:10px">
+                <li>Если Claude написал код и появился результат — всё включено ✓</li>
+                <li>Если нет — вернись к шагу 02 и включи галочки</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- БЛОК 2: Project -->
+    <div class="section-block">
+      <div class="section-label">Блок 2 · 10 минут</div>
+      <h2 class="section-title" style="font-size:20px">Что такое Project и зачем он нужен</h2>
+      <p class="section-desc">Обычный диалог = каждый раз нанимаешь нового копирайтера, объясняешь кто ты. Project = свой человек, который всё помнит. Один раз настроил — не повторяешься.</p>
+
+      <div class="step-card">
+        <div><div class="step-num" style="font-size:13px;padding-top:4px">Демо</div></div>
+        <div>
+          <div class="step-title">Промпт для демонстрации — Project vs пустой чат</div>
+          <div class="step-body">
+            <p style="margin-bottom:8px">Вставь сначала в Project, потом в пустой чат — покажи разницу в результате.</p>
+            <div class="copy-block">
+              <div class="copy-label">Промпт для демо</div>
+              <pre class="copy-pre">Напиши пост на тему: "Почему я перестала нанимать копирайтера"
+
+Тезисы:
+— платила 5000 за пост, ждала 3 дня, правки по 2 раза
+— теперь делаю сама за 15 минут через Claude</pre>
+              <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- БЛОК 3: Telegram Project -->
+    <div class="section-block">
+      <div class="section-label">Блок 3 · 25 минут · Делают вместе с экраном</div>
+      <h2 class="section-title" style="font-size:20px">Создаём Telegram Project под свою нишу</h2>
+      <p class="section-desc">На экране — пример для нутрициолога Марины. Ты делаешь под свою нишу параллельно.</p>
+
+      <div class="steps">
+
+        <div class="step-card">
+          <div><div class="step-num">01</div></div>
+          <div>
+            <div class="step-title">Создать Project</div>
+            <div class="step-body">
+              <ul>
+                <li>Левая панель → New Project → дай название</li>
+                <li>Называй понятно: «Посты ТГ | Марина» или «Контент нутрициолог». Не «Проект 1»</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">02</div></div>
+          <div>
+            <div class="step-title">Custom Instructions — вставить шаблон</div>
+            <div class="step-body">
+              <p style="margin-bottom:8px">Project → Edit → Custom Instructions. Скопируй шаблон, замени [скобки] на свои данные.</p>
+              <div class="copy-block">
+                <div class="copy-label">Шаблон — Custom Instructions (Telegram)</div>
+                <pre class="copy-pre">Я [ИМЯ] — [ниша], [чем занимаюсь].
+Веду Telegram-канал @[handle] ([N] подписчиков).
+В этом проекте я пишу посты для канала.
+
+КОНТЕКСТ:
+— Моя аудитория: [возраст, статус, главная боль]
+— Тематика: [о чём пишу — 3–5 тем]
+— Подгружай детали из файла моя-аудитория.md
+
+СТИЛЬ:
+— [тёплый / экспертный / разговорный]
+— Пишу от первого лица: «я сделала», «я попробовала»
+
+ЦЕЛЬ ПОСТОВ:
+— Куда ведём: [бот / директ / просто охваты]
+— CTA по умолчанию: [кодовое слово / ссылка]
+
+ЧЕГО НЕ ДЕЛАТЬ:
+— Не использовать: [список стоп-слов]
+— Не добавлять хэштеги
+— Если дала только тему без тезисов — спроси, не выдумывай факты</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+              <div class="copy-block" style="margin-top:10px">
+                <div class="copy-label">Пример заполненного шаблона — нутрициолог Марина</div>
+                <pre class="copy-pre">Я Марина — нутрициолог, специализация питание для мам в декрете.
+Веду Telegram-канал @marina_nutrition (3 800 подписчиков).
+В этом проекте я пишу посты для канала.
+
+КОНТЕКСТ:
+— Моя аудитория: женщины 28–40, мамы детей до 5 лет,
+  хотят похудеть после родов, не успевают готовить,
+  мало времени и сил на себя
+— Тематика: питание, здоровые привычки, быстрые рецепты,
+  лайфхаки для мам
+— Подгружай детали из файла моя-аудитория.md
+
+СТИЛЬ:
+— Тёплый, поддерживающий, без давления и обвинений
+— Пишу от первого лица: «я сама была в декрете», «я тоже устаю»
+— Простой язык, без сложных терминов нутрициологии
+
+ЦЕЛЬ ПОСТОВ:
+— Веду на бесплатную консультацию через директ
+— Кодовое слово: ПИТАНИЕ
+
+ЧЕГО НЕ ДЕЛАТЬ:
+— Не давать конкретных диет без знания ситуации
+— Не использовать: «детокс», «очищение», «разгон метаболизма»
+— Не давить виной — «ты плохая мать если...» — никогда
+— Не выдумывать научные данные
+— Если дала только тему без тезисов — спроси, не выдумывай</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">03</div></div>
+          <div>
+            <div class="step-title">Загрузить скиллы</div>
+            <div class="step-body">
+              <p style="margin-bottom:8px">Project → Add content → загрузи по одному из раздачи:</p>
+              <ul>
+                <li><code>tg-post-writer.md</code></li>
+                <li><code>humanizer.md</code></li>
+              </ul>
+              <div class="step-tip">Скиллы уже настроены под любую нишу — трогать не нужно. Весь личный контекст идёт через Custom Instructions и файл аудитории.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">04</div></div>
+          <div>
+            <div class="step-title">Файл целевой аудитории</div>
+            <div class="step-body">
+              <p style="margin-bottom:8px">Скопируй шаблон, заполни под себя, сохрани как <code>моя-аудитория.md</code> → загрузи в Project через Add content.</p>
+              <div class="copy-block">
+                <div class="copy-label">Шаблон — моя-аудитория.md</div>
+                <pre class="copy-pre"># Моя целевая аудитория
+
+## Кто они
+— Возраст: [25–35 / 30–45]
+— Статус: [мамы / эксперты / предприниматели]
+— Где: [Россия / СНГ]
+
+## Главные боли (5 штук)
+1. [боль 1 — в их словах]
+2. [боль 2]
+3. [боль 3]
+4. [боль 4]
+5. [боль 5]
+
+## Фразы которыми они говорят
+— «[фраза 1]»
+— «[фраза 2]»
+— «[фраза 3]»
+
+## Их главный страх
+[что боятся больше всего]
+
+## Их главное желание
+[результат — не продукт]</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+              <p style="margin-top:10px;font-size:13px;color:var(--grey2)">Нет данных? Посмотри 20–30 комментариев у конкурентов — выпиши фразы дословно. Или спроси в сторис: «Что вас больше всего бесит в [теме]?»</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">05</div></div>
+          <div>
+            <div class="step-title">Примеры постов-эталонов</div>
+            <div class="step-body">
+              <ul>
+                <li>Возьми 3–5 своих лучших постов (или чужих, чей стиль нравится)</li>
+                <li>Скопируй тексты в один файл <code>мои-посты-эталоны.md</code></li>
+                <li>Загрузи в Project через Add content</li>
+              </ul>
+              <p style="margin-top:8px;font-size:13px;color:var(--grey2)">Нет своих? Возьми посты нутрициолога (или эксперта своей ниши) чей стиль близок. Напиши в чат — подскажу чьи брать.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">06</div></div>
+          <div>
+            <div class="step-title">Первый тест</div>
+            <div class="step-body">
+              <div class="copy-block">
+                <div class="copy-label">Промпт для теста — пример для нутрициолога</div>
+                <pre class="copy-pre">Напиши пост на тему: почему я не советую считать калории мамам в декрете
+
+Тезисы:
+— в декрете и так стресс, считать калории = ещё больше стресс
+— стресс повышает кортизол и мешает похудению
+— лучше работает: режим сна, белок на завтрак, движение 15 мин</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- БЛОК 4: Скиллы -->
+    <div class="section-block">
+      <div class="section-label">Блок 4 · 15 минут</div>
+      <h2 class="section-title" style="font-size:20px">Скиллы: два типа и установка</h2>
+      <p class="section-desc">Project — это память ассистента. Скилл — конкретная инструкция для конкретной задачи. Грузятся в два разных места.</p>
+
+      <div class="steps">
+
+        <div class="step-card">
+          <div><div class="step-num" style="font-size:11px;line-height:1.3;padding-top:4px">Тип 1</div></div>
+          <div>
+            <div class="step-title">Кастомные скиллы — внутри Project</div>
+            <div class="step-body">
+              <ul>
+                <li>Текстовые .md файлы</li>
+                <li>Загружаются через Project → Add content</li>
+                <li>Работают только внутри этого проекта</li>
+                <li><code>tg-post-writer.md</code>, <code>instagram-content-creator.md</code>, <code>humanizer.md</code></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num" style="font-size:11px;line-height:1.3;padding-top:4px">Тип 2</div></div>
+          <div>
+            <div class="step-title">Personal Skills — глобальные, с кодом</div>
+            <div class="step-body">
+              <ul>
+                <li>Выполняют код — рисуют PNG, создают файлы</li>
+                <li>Загружаются через Settings → Customize → Skills → «+»</li>
+                <li>Работают во всех чатах и проектах сразу</li>
+                <li><code>carousel-design.zip</code> — рисует карусели в фирменном стиле</li>
+              </ul>
+              <span class="group-label" style="margin-top:10px">Установить carousel-design как Personal Skill:</span>
+              <ul>
+                <li>Settings → Customize → Skills → «+»</li>
+                <li>Upload skill → выбери <code>carousel-design.zip</code> из раздачи</li>
+                <li>Найди в списке → включи тумблер справа</li>
+              </ul>
+              <div class="step-tip">Делается один раз. После этого скилл работает во всех чатах автоматически.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num" style="font-size:18px">+</div></div>
+          <div>
+            <div class="step-title">Создать скилл с нуля — через Claude</div>
+            <div class="step-body">
+              <p style="margin-bottom:8px">Нужен скилл которого нет в раздаче — попроси Claude написать его:</p>
+              <div class="copy-block">
+                <div class="copy-label">Промпт для генерации скилла</div>
+                <pre class="copy-pre">Создай скилл (инструкцию в формате .md) для написания
+email-рассылки для онлайн-школы.
+
+Скилл должен включать:
+— описание задачи
+— структуру письма (тема, прехедер, тело, CTA)
+— тон: дружелюбный, не продающий напрямую
+— чего избегать: спам-слова, слишком длинные письма
+— 2 примера готовых писем
+
+Формат: markdown файл, готовый к загрузке в Claude Project.</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+              <p style="margin-top:8px;font-size:13px;color:var(--grey2)">Получаете файл → сохраняете как .md → загружаете в Project. Готово.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- БЛОК 5: Instagram -->
+    <div class="section-block">
+      <div class="section-label">Блок 5 · 25 минут</div>
+      <h2 class="section-title" style="font-size:20px">Instagram Project + карусель от текста до PNG</h2>
+      <p class="section-desc">Тот же принцип что и для Telegram — другой скилл и Custom Instructions. Плюс полный pipeline карусели.</p>
+
+      <div class="steps">
+
+        <div class="step-card">
+          <div><div class="step-num">01</div></div>
+          <div>
+            <div class="step-title">Создать Instagram Project</div>
+            <div class="step-body">
+              <ul>
+                <li>New Project → название «Instagram | имя»</li>
+                <li>Add content: <code>instagram-content-creator.md</code> + <code>humanizer.md</code> + <code>моя-аудитория.md</code></li>
+              </ul>
+              <div class="step-tip">⚠️ carousel-design в проект не грузить — он уже в Personal Skills и работает глобально.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">02</div></div>
+          <div>
+            <div class="step-title">Custom Instructions для Instagram Project</div>
+            <div class="step-body">
+              <div class="copy-block">
+                <div class="copy-label">Полный шаблон — Custom Instructions (Instagram)</div>
+                <pre class="copy-pre">Я [твоё имя] — [твоя роль/ниша].
+Веду Instagram @[твой_аккаунт] ([сколько] подписчиков).
+Снимаю рилсы, делаю карусели и сторис про [твою тему].
+В этом проекте мы пишем контент для Instagram: рилсы, карусели, сторис.
+
+КАК РАБОТАЕМ:
+1. Я даю тему и формат (рилс / карусель / сторис)
+2. Если формат не указан — предложи оптимальный для темы
+3. Ты по скиллу instagram-content-creator выдаёшь полный сценарий
+4. Всегда давай 2-3 варианта хука на выбор
+
+ФОРМАТ РИЛСОВ ПО УМОЛЧАНИЮ:
+— Длина: 15-30 секунд (короткие лучше тащит алгоритм)
+— Структура: хук (0-3 сек) → проблема → решение → CTA
+— Снимаю [talking head / скринкаст / войсовер с б-роллом]
+— Голос: [дружелюбный / экспертный / прямой], без пафоса
+
+ФОРМАТ КАРУСЕЛЕЙ ПО УМОЛЧАНИЮ:
+— 8-10 слайдов
+— Текст на слайде максимум 40 слов
+— После генерации текстов предлагай запустить carousel-design
+  для рендера PNG в моём фирменном стиле
+
+ФОРМАТ СТОРИС:
+— Серия из 3-7 штук
+— Тип определяешь по теме: закулисье / мини-урок / опрос-серия
+
+CTA ЧЕРЕЗ КОДОВОЕ СЛОВО (стандарт):
+— Каждый рилс/карусель ведёт на бот через кодовое слово в директе
+— Формулировка: «Напиши в директ слово [СЛОВО] — пришлю [что]»
+— Если кодовое слово не указала — предложи 2-3 варианта на выбор
+
+КОНТЕКСТ АУДИТОРИИ:
+— Подгружай данные из файла моя-аудитория.md
+— Пиши простым языком, без жаргона
+— Конкретика важнее абстракции: цифры, названия, шаги
+
+СТИЛЬ:
+— [Опиши голос: дружелюбный / экспертный / провокационный]
+— [Что важно: личный опыт / кейсы / факты с цифрами]
+
+ЧЕГО НЕ ДЕЛАТЬ:
+— Не писать «уникальный», «революционный», «секрет»
+— Не делать кликбейт типа «ШОК!!!»
+— Не пихать в один рилс несколько мыслей
+— Не выдумывать факты и цифры которых я не дала
+
+ПОСЛЕ ВЫДАЧИ РЕЗУЛЬТАТА:
+— Напомни прогнать финальный текст через скилл humanizer
+— Если делали карусель — предложи запустить carousel-design
+
+ЕСЛИ Я ДАЮ ТЕМУ — выдавай сценарий сразу по структуре,
+не задавая лишних вопросов. Если тезисов мало — спроси.</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">03</div></div>
+          <div>
+            <div class="step-title">Шаг 1 карусели — тексты через instagram-content-creator</div>
+            <div class="step-body">
+              <div class="copy-block">
+                <div class="copy-label">Промпт — карусель (нутрициолог)</div>
+                <pre class="copy-pre">[скилл instagram-content-creator]
+
+Сделай карусель на тему: 5 мифов о питании в декрете
+которые мешают похудеть
+
+Формат: 8 слайдов
+Слайд 1 — обложка, провокационный заголовок
+Слайды 2–6 — по одному мифу: заголовок + правда в 2–3 строки
+Слайд 7 — вывод
+Слайд 8 — CTA «сохрани себе»</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">04</div></div>
+          <div>
+            <div class="step-title">Шаг 2 карусели — дизайн через carousel-design</div>
+            <div class="step-body">
+              <div class="copy-block">
+                <div class="copy-label">Промпт — дизайн карусели (нутрициолог)</div>
+                <pre class="copy-pre">[скилл carousel-design]
+
+Слайд 1: «5 мифов о питании в декрете которые мешают похудеть»
+
+Слайд 2: Миф 1 — надо считать калории /
+В декрете и так стресс. Считать калории = ещё больший стресс.
+Это повышает кортизол и мешает похудению.
+
+Слайд 3: [следующий миф]
+
+[и т.д. по всем слайдам]</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">05</div></div>
+          <div>
+            <div class="step-title">Создать карусель в своём стиле</div>
+            <div class="step-body">
+              <ul>
+                <li>Загрузи 2–3 скрина дизайна карусели который нравится (референс)</li>
+                <li>Загрузи своё фото (для обложки)</li>
+                <li>Вставь тексты слайдов</li>
+              </ul>
+              <div class="copy-block" style="margin-top:10px">
+                <div class="copy-label">Промпт — карусель по референсу</div>
+                <pre class="copy-pre">Сделай мне пост-карусель как на референсе.
+Первое фото — моя обложка.
+
+Тексты слайдов:
+[вставить тексты]</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+              <div class="copy-block" style="margin-top:8px">
+                <div class="copy-label">Если результат нравится — упакуй в скилл</div>
+                <pre class="copy-pre">Упакуй это в скилл для дизайна постов-каруселей.</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+              <p style="margin-top:8px;font-size:13px;color:var(--grey2)">Claude создаёт ваш личный скилл. Сохраняете в Personal Skills — карусели в вашем стиле автоматически.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- БЛОК 6: Практика -->
+    <div class="section-block">
+      <div class="section-label">Блок 6 · Практика · 15 минут</div>
+      <h2 class="section-title" style="font-size:20px">Пишем прямо сейчас</h2>
+      <p class="section-desc">10 минут самостоятельной работы, потом разбираем 5–7 постов вместе.</p>
+
+      <div class="copy-block" style="margin-bottom:24px">
+        <div class="copy-label">Задание — вставь в свой Telegram Project</div>
+        <pre class="copy-pre">Напиши пост на тему: почему я начал(а) изучать ИИ
+
+Тезисы:
+— [напиши своё — 2-3 факта из твоего опыта]</pre>
+        <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+      </div>
+
+      <div class="checklist" style="margin-bottom:16px">
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Настроен кабинет Claude (Instructions + Capabilities)</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Создан Telegram Project с Custom Instructions, скиллами и файлом аудитории</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Создан Instagram Project</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Установлен carousel-design как Personal Skill</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Написан и опубликован минимум 1 пост</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Написано 5 постов разных форматов: история / разбор / кейс / вопрос / продающий</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Результаты скинуты в чат</div>
+        </div>
+      </div>
+
+      <div class="alert" style="margin-bottom:0">
+        <strong>День 2:</strong> берём эти посты → делаем лид-магнит и автоворонку в Telegram за 30 минут. Приходи с ноутбуком.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ ДЕНЬ 2 ═══ -->
+  <div id="day2" class="day-section">
+
+    <div class="section-block">
+      <div class="section-label">День 2 · 90 минут</div>
+      <h2 class="section-title">Автоворонка с лид-магнитом</h2>
+      <p class="section-desc">Результат: PDF лид-магнит через Claude + бот в Telegram + воронка из 4 сообщений + связка с контентом.</p>
+    </div>
+
+    <!-- ЗАПИСЬ -->
+    <div class="section-block">
+      <div class="section-label">Уроки · День 2</div>
+      <h2 class="section-title" style="font-size:20px">Запись эфира</h2>
+      <div class="lessons">
+        <div class="lesson-card">
+          <div class="lesson-meta">
+            <span class="lesson-num">День 2</span>
+            <span class="lesson-duration">~90 мин</span>
+          </div>
+          <div class="lesson-title">Автоворонка с лид-магнитом</div>
+          <div class="lesson-desc">Создание автоворонки в Chatplace, создание лид-магнита в Claude, связка через MCP.</div>
+          <div class="video-placeholder">
+            <div class="vp-inner">
+              <div class="vp-icon">▶</div>
+              <div class="vp-text">Запись появится после эфира</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- БЛОК 0 -->
+    <div class="section-block">
+      <div class="section-label">Блок 0 · 5 минут</div>
+      <h2 class="section-title" style="font-size:20px">Технический чек-поинт</h2>
+      <div class="checklist" style="margin-bottom:0">
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Chatplace зарегистрирован, бот подключён через @BotFather</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Claude Pro активен, кабинет настроен (Instructions + Capabilities)</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Есть идея темы для лид-магнита</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ВСТУПЛЕНИЕ -->
+    <div class="section-block" style="margin-bottom:28px">
+      <div class="alert" style="font-style:italic;line-height:1.8;margin-bottom:12px">
+        Контент без воронки — это просто бесплатный труд. Воронка превращает охваты в подписчиков, подписчиков в заявки, заявки в продажи. И всё это работает автоматически, 24/7, пока вы спите.<br><br>
+        Вчера написали посты → сегодня делаем так, чтобы эти посты приводили заявки.
+      </div>
+      <div class="card2-box">
+        <div class="section-label" style="margin-bottom:10px">Что мы сделаем сегодня</div>
+        <p style="color:var(--grey2);font-size:13.5px;margin-bottom:10px">Собираем минимально жизнеспособную версию воронки за 90 минут. У вас будет:</p>
+        <ul style="list-style:none;padding:0;color:var(--grey2);font-size:13.5px;line-height:2">
+          <li>📄 PDF лид-магнит — создадим через Claude за 15 минут</li>
+          <li>🤖 Бот в Telegram через Chatplace</li>
+          <li>💬 Воронка из 4 сообщений: приветствие + лид-магнит → прогрев → социальное доказательство → приглашение</li>
+          <li>🔗 Связка с вашим контентом: пост → кодовое слово → бот → воронка</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- БЛОК 1 -->
+    <div class="section-block">
+      <div class="section-label">Блок 1 · 10 минут</div>
+      <h2 class="section-title" style="font-size:20px">Что такое автоворонка</h2>
+      <p class="section-desc">Контент без воронки — бесплатный труд. Воронка превращает охваты в подписчиков, подписчиков в заявки, заявки в продажи. 24/7 без твоего участия.</p>
+
+      <div class="step-card" style="margin-bottom:0">
+        <div><div class="step-num" style="font-size:13px;padding-top:4px">Схема</div></div>
+        <div>
+          <div class="step-title">Путь подписчика</div>
+          <div class="step-body" style="font-size:13px;line-height:2">
+            📱 Пост / Рилс / Карусель<br>
+            ↓<br>
+            💬 «Напиши слово <b style="color:var(--white)">ПОДДЕРЖКА</b> в директ»<br>
+            ↓<br>
+            🤖 Бот в Telegram (Chatplace)<br>
+            ↓<br>
+            📄 Получает лид-магнит (PDF)<br>
+            ↓<br>
+            ⏱ Через 2 часа — прогревающее сообщение<br>
+            ↓<br>
+            ⏱ Через 24 часа — социальное доказательство<br>
+            ↓<br>
+            ⏱ Через 48 часов — приглашение в продукт
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- БЛОК 2 -->
+    <div class="section-block">
+      <div class="section-label">Блок 2 · 20 минут</div>
+      <h2 class="section-title" style="font-size:20px">Создаём PDF лид-магнит через Claude</h2>
+
+      <div class="steps">
+
+        <div class="step-card">
+          <div><div class="step-num">01</div></div>
+          <div>
+            <div class="step-title">Что такое хороший лид-магнит</div>
+            <div class="step-body">
+              <span class="group-label">✅ Хороший лид-магнит:</span>
+              <ul>
+                <li>Решает одну конкретную боль за 5–15 минут чтения</li>
+                <li>Короткий и прикладной — не учебник на 50 страниц</li>
+                <li>Даёт быстрый результат («вау, она реально шарит»)</li>
+                <li>Связан с темой платного продукта</li>
+              </ul>
+              <span class="group-label" style="margin-top:10px">❌ Плохой лид-магнит:</span>
+              <ul>
+                <li>«Гайд по [огромная тема]» на 70 страниц</li>
+                <li>Общая теория без конкретных шагов</li>
+                <li>То что можно загуглить за 5 минут</li>
+              </ul>
+              <span class="group-label" style="margin-top:10px">Примеры по нишам:</span>
+              <ul>
+                <li>Психолог: «5 техник самопомощи при панической атаке» — 4 страницы</li>
+                <li>Нутрициолог: «Готовое меню на неделю для занятых мам» — 6 страниц с рецептами</li>
+                <li>Маркетолог: «Чек-лист продающего лендинга — 17 пунктов» — одна страница</li>
+                <li>Финансист: «10 точек где вы теряете деньги в семейном бюджете» — 3 страницы</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">02</div></div>
+          <div>
+            <div class="step-title">Custom Instructions для Project «Лид-магниты»</div>
+            <div class="step-body">
+              <p style="margin-bottom:8px">Создай новый Project «Лид-магниты | [имя]». Вставь в Instructions, заполни {фигурные скобки}.</p>
+              <div class="copy-block">
+                <div class="copy-label">Шаблон Custom Instructions — Project «Лид-магниты»</div>
+                <pre class="copy-pre">Ты — мой ассистент по созданию лид-магнитов для {ИМЯ ФАМИЛИЯ}.
+
+КОНТЕКСТ
+Я веду {Telegram / Instagram / YouTube} ({@handle}, ~{N} подписчиков) о {тема — одна строка} на {язык}.
+Продаю {что продаю — курсы / услуги / консультации}.
+Аудитория — {кто они одной фразой}.
+
+БРЕНД
+- Тон: {тёплый / прямой / экспертный / разговорный}
+- Обращение: {на «ты» / на «вы»}
+- Запрещённые слова: {список, если есть}
+
+ОБЯЗАТЕЛЬНЫЙ WORKFLOW
+Шаг 1. БРИФ — при первом сообщении задай эти вопросы (одним сообщением):
+1. Тема лид-магнита (что человек научится делать)
+2. На какой продукт ведёт лид-магнит
+3. Кто целевой читатель — одной фразой
+4. Какой готовый артефакт внутри (промпт / шаблон / чек-лист)
+5. Есть ли личный кейс по этой теме
+Не двигайся дальше пока не получишь ответы.
+
+Шаг 2. ПРОВЕРКА — прогони тему через критерии:
+- Есть ли в названии глагол результата?
+- Решает ОДНУ проблему?
+- Есть готовый артефакт?
+Если тема слабая — скажи прямо и предложи 2-3 варианта пересборки.
+
+Шаг 3. ПЛАН — оглавление + 1 строка о каждом разделе + объём страниц. Жди ОК.
+Шаг 4. ТЕКСТ — пиши секцию за секцией, жди реакции после каждой.
+Шаг 5. ФИНАЛЬНАЯ СБОРКА — единый текст для PDF + промпт для обложки + пост-анонс.
+
+СТРУКТУРА ЛЮБОГО ЛИД-МАГНИТА
+1. Обложка
+2. Кому это (3 пункта «для тебя если» + 1 «не для тебя если»)
+3. Проблема (мой кейс + цифра)
+4. Решение пошагово (5-8 страниц)
+5. Готовый артефакт
+6. Частые ошибки (опционально)
+7. Что дальше → CTA
+
+ПРАВИЛА ТЕКСТА
+- Никаких «В современном мире», «Важно понимать что», «Как известно»
+- Никаких базовых глав «что такое {ниша}» — аудитория знает основу
+- Каждый раздел начинается с конкретики, не с теории
+- Объём: 5–15 страниц, не больше
+- CTA встроен в логику последнего раздела, не приклеен сбоку
+
+МОИ ПРОДУКТЫ (для CTA):
+- {Название} — {что это, для кого, цена}. Триггер-слово: {слово}
+
+ЧЕГО НЕ ДЕЛАТЬ
+- Не предлагать темы самому — я даю тему, ты делаешь или критикуешь
+- Не писать «Отличная идея!», «Конечно!»
+- Не растягивать объём ради солидности</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">03</div></div>
+          <div>
+            <div class="step-title">Файлы в knowledge проекта</div>
+            <div class="step-body">
+              <ul>
+                <li><code>стандарт-лид-магнита.md</code> — структура PDF, критерии качества, стоп-лист</li>
+                <li><code>брендбук.md</code> — цвета, тон голоса, запрещённые формулировки</li>
+                <li><code>мои-продукты.md</code> — каждый продукт: что внутри, цена, триггер-слово</li>
+                <li><code>кейсы-и-цифры.md</code> — личные кейсы и кейсы клиентов с цифрами</li>
+                <li><code>примеры-материалов.md</code> — 3–5 лучших постов как референс стиля</li>
+              </ul>
+              <div class="step-tip" style="margin-top:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+                <span>📄 <strong>стандарт-лид-магнита.md</strong> — универсальный, не меняется. Положи в knowledge каждого проекта.</span>
+                <button class="download-btn" onclick="downloadFile('standart-lid-magnita.md', standartLidMagnita)">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Скачать файл
+                </button>
+              </div>
+              <div class="step-tip" style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+                <span>📄 <strong>шаблон-мои-продукты.md</strong> — заполни и загрузи в knowledge. Claude будет делать точные CTA с триггер-словами.</span>
+                <button class="download-btn" onclick="downloadFile('shablon-moi-produkty.md', shablonMoiProdukty)">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Скачать файл
+                </button>
+              </div>
+              <div class="step-tip">Чем больше контекста в knowledge — тем меньше объясняешь в каждом запросе. Один раз настроил — Claude пишет в твоём голосе автоматически.</div>
+              <div class="copy-block" style="margin-top:12px">
+                <div class="copy-label">Шаблон — брендбук.md</div>
+                <pre class="copy-pre"># Брендбук {ИМЯ ФАМИЛИЯ}
+
+## 1. Кто я и о чём пишу
+{Одно предложение: кто ты, ниша, для кого работаешь}
+
+## 2. Тон голоса
+Мой стиль: {прямой / мягкий / тёплый / экспертный / разговорный}
+Обращение на: {«ты» / «вы»}
+
+## 3. Визуальный стиль
+- Основные цвета: {например: чёрный + жёлтый}
+- Шрифты: {заголовки — жирный sans-serif, текст — serif}
+- Стиль изображений: {минимализм / фото / иллюстрации}
+
+## 4. Запрещённые слова
+- {слово 1}
+- {слово 2}
+- {фраза 1}
+
+## 5. Как я НЕ говорю
+- ❌ {пример 1}
+- ❌ {пример 2}
+
+## 6. Как я говорю
+- ✅ {пример 1}
+- ✅ {пример 2}
+
+## 7. Эмодзи
+- Использую: {часто / редко / не использую}
+- Если использую — какие: {список}
+
+## 8. Чем отличаюсь от конкурентов
+{1–3 предложения}</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">04</div></div>
+          <div>
+            <div class="step-title">Пишем запрос и создаём PDF</div>
+            <div class="step-body">
+              <div class="copy-block">
+                <div class="copy-label">Промпт — создать лид-магнит (пример нутрициолог)</div>
+                <pre class="copy-pre">Создай PDF лид-магнит для моих подписчиков.
+
+Тема: Готовое меню на неделю для занятых мам — с рецептами до 15 минут
+
+Структура по стандарту из knowledge.
+
+CTA в финале → триггер-слово МЕНЮ.
+
+Создай PDF файл который я могу скачать.</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+              <div class="copy-block" style="margin-top:10px">
+                <div class="copy-label">Промпт — шаблон под свою нишу</div>
+                <pre class="copy-pre">Создай PDF лид-магнит для моих подписчиков.
+
+Тема: [впиши свою тему — глагол результата обязателен]
+
+Структура по стандарту из knowledge.
+
+CTA в финале → триггер-слово [ТВОЁ КОДОВОЕ СЛОВО].
+
+Создай PDF файл который я могу скачать.
+
+---
+Если в knowledge ещё нет файлов — добавь контекст сюда:
+Моя ниша: [нутрициолог / психолог / юрист / кондитер]
+Моя аудитория: [кто твои подписчики]
+Стиль: [тёплый / деловой / лёгкий с юмором]</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- БЛОК 3 -->
+    <div class="section-block">
+      <div class="section-label">Блок 3 · 10 минут</div>
+      <h2 class="section-title" style="font-size:20px">Создаём бота через @BotFather</h2>
+      <p class="section-desc">Если прошёл День 0 и бот уже создан — пропускай этот блок.</p>
+
+      <div class="steps">
+
+        <div class="step-card">
+          <div><div class="step-num">01</div></div>
+          <div>
+            <div class="step-title">Создать бота</div>
+            <div class="step-body">
+              <ul>
+                <li>Открыть Telegram → найти <a href="https://t.me/BotFather" target="_blank">@BotFather</a></li>
+                <li>Команда <code>/newbot</code></li>
+                <li>Дать имя: например, «Natalia Nutrition Helper»</li>
+                <li>Дать username — должен заканчиваться на <code>bot</code>: <code>natalia_nutrition_bot</code></li>
+                <li>Скопировать токен — длинная строка вида <code>1234567890:ABCdef...</code></li>
+              </ul>
+              <div class="step-tip">⚠️ Токен — ключ к боту. Никому не показывай, не выкладывай в публичный чат.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">02</div></div>
+          <div>
+            <div class="step-title">Базовая настройка через @BotFather</div>
+            <div class="step-body">
+              <ul>
+                <li><code>/setdescription</code> → описание бота</li>
+                <li><code>/setabouttext</code> → короткая строка «о боте»</li>
+                <li><code>/setuserpic</code> → аватарка 512×512</li>
+                <li><code>/setcommands</code> → оставить <code>/start</code></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- БЛОК 4 -->
+    <div class="section-block">
+      <div class="section-label">Блок 4 · 15 минут</div>
+      <h2 class="section-title" style="font-size:20px">Подключение к Chatplace + воронка из 4 сообщений</h2>
+
+      <div class="steps">
+
+        <div class="step-card">
+          <div><div class="step-num">01</div></div>
+          <div>
+            <div class="step-title">Подключить бота к Chatplace</div>
+            <div class="step-body">
+              <ul>
+                <li>Зайти на <a href="https://chatplace.io/ru/?r=019b682d-3b52-73f1-9ad3-31d2293a3243" target="_blank">chatplace.io</a></li>
+                <li>Боты → Добавить бота → Telegram</li>
+                <li>Вставить токен из @BotFather</li>
+                <li>Готово — бот подключён</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">02</div></div>
+          <div>
+            <div class="step-title">Структура воронки — 4 сообщения</div>
+            <div class="step-body">
+              <div class="copy-block">
+                <div class="copy-label">Сообщение 1 — мгновенно после /start</div>
+                <pre class="copy-pre">Привет! Я [имя], [кто ты]. Держи твой подарок — PDF «[название лид-магнита]» 👇
+
+[кнопка: Получить PDF]</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+              <div class="copy-block" style="margin-top:8px">
+                <div class="copy-label">Сообщение 2 — через 2 часа</div>
+                <pre class="copy-pre">Привет! Успела посмотреть PDF? 🙂 Что больше всего откликнулось?
+
+Напиши мне — мне важно знать что полезно, а что можно улучшить.</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+              <div class="copy-block" style="margin-top:8px">
+                <div class="copy-label">Сообщение 3 — через 24 часа</div>
+                <pre class="copy-pre">Хочу поделиться историей моей клиентки [имя].
+
+[2-3 предложения: какая была проблема → что изменилось]
+
+[скриншот отзыва]</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+              <div class="copy-block" style="margin-top:8px">
+                <div class="copy-label">Сообщение 4 — через 48 часов</div>
+                <pre class="copy-pre">Если хочешь [результат] — я могу помочь разобраться глубже.
+
+Предлагаю [бесплатную консультацию / первый урок бесплатно] — без давления, просто поговорим.
+
+[кнопка: Записаться]</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- БЛОК 5 -->
+    <div class="section-block">
+      <div class="section-label">Блок 5 · 20 минут</div>
+      <h2 class="section-title" style="font-size:20px">Адаптация воронки под свою нишу</h2>
+
+      <div class="steps">
+
+        <div class="step-card">
+          <div><div class="step-num">01</div></div>
+          <div>
+            <div class="step-title">Что обязательно менять</div>
+            <div class="step-body">
+              <ul>
+                <li>Тексты сообщений — переписываем под свой голос и нишу</li>
+                <li>Лид-магнит — заменяем на свой PDF</li>
+                <li>Тайминги — 2 ч → 24 ч → 48 ч (можно менять)</li>
+                <li>CTA в финале — консультация / продукт / канал</li>
+                <li>Кодовое слово — что человек пишет в директ</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">02</div></div>
+          <div>
+            <div class="step-title">Переписываем сообщения через Claude</div>
+            <div class="step-body">
+              <div class="copy-block">
+                <div class="copy-label">Промпт — переписать воронку под свою нишу</div>
+                <pre class="copy-pre">Перепиши под мой стиль 4 сообщения автоворонки в Telegram-боте.
+
+Контекст: человек подписался на мой бот через кодовое слово [СЛОВО].
+Получил PDF «[название]». Дальше идёт автоматическая воронка из 4 сообщений.
+
+СООБЩЕНИЕ 1 (мгновенно): приветствие + кнопка получить PDF
+СООБЩЕНИЕ 2 (через 2 часа): спросить впечатления, вовлечь в диалог
+СООБЩЕНИЕ 3 (через 24 часа): социальное доказательство — отзыв клиентки
+СООБЩЕНИЕ 4 (через 48 часов): приглашение на консультацию / в продукт
+
+Стиль: [тёплый / деловой / лёгкий]. Каждое сообщение — не больше 4-5 предложений. С эмодзи, но без перебора.</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">03</div></div>
+          <div>
+            <div class="step-title">Загрузка PDF в бота</div>
+            <div class="step-body">
+              <ul>
+                <li>Chatplace → сообщение 1 → блок «Действие» → «Отправить файл»</li>
+                <li>Загрузить PDF лид-магнит</li>
+                <li>Сохранить</li>
+                <li>Протестировать — нажать Start у своего бота и проверить что PDF приходит</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="alert" style="margin-top:16px">
+        <strong>🔗 Бонус: Claude + Chatplace через конекторы</strong><br>
+        Можно подключить Chatplace как MCP-конектор в Claude — и создавать сообщения воронки прямо из чата, без ручного копирования.
+        <div class="copy-block" style="margin-top:10px">
+          <div class="copy-label">Пример запроса через конектор</div>
+          <pre class="copy-pre">Я нутрициолог, моя аудитория — занятые мамы.
+
+Создай в моём боте автоворонку из 4 сообщений:
+1. Приветствие + кнопка получить PDF меню
+2. Через 2 часа — вопрос о впечатлениях
+3. Через 24 часа — отзыв клиентки
+4. Через 48 часов — приглашение на консультацию
+
+Стиль: тёплый, без давления, с эмодзи.
+
+Создай эти сообщения прямо в моём боте через Chatplace.</pre>
+          <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+        </div>
+        <div class="step-card" style="margin-top:12px">
+          <div><div class="step-num" style="font-size:13px;padding-top:4px">URL</div></div>
+          <div>
+            <div class="step-title">MCP-сервер Chatplace — для подключения в Claude</div>
+            <div class="step-body">
+              <p style="margin-bottom:8px">Settings → Integrations → Add MCP Server → вставь URL:</p>
+              <div class="copy-block">
+                <div class="copy-label">MCP Server URL</div>
+                <pre class="copy-pre">https://mcp.chatplace.io/mcp</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- БЛОК 6 -->
+    <div class="section-block">
+      <div class="section-label">Блок 6 · 10 минут</div>
+      <h2 class="section-title" style="font-size:20px">Связка с контентом: пост → бот</h2>
+
+      <div class="steps">
+
+        <div class="step-card">
+          <div><div class="step-num">01</div></div>
+          <div>
+            <div class="step-title">Как работает связка</div>
+            <div class="step-body" style="font-size:13px;line-height:2">
+              📱 Публикуешь рилс / пост / карусель<br>
+              ↓<br>
+              💬 В конце CTA: «напиши в директ слово X — пришлю Y»<br>
+              ↓<br>
+              👤 Человек пишет X в директ<br>
+              ↓<br>
+              🤖 Автоответ даёт ссылку на бота<br>
+              ↓<br>
+              ▶️ Человек нажимает Start → попадает в воронку
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">02</div></div>
+          <div>
+            <div class="step-title">Автоответ в Instagram директ</div>
+            <div class="step-body">
+              <ul>
+                <li>Instagram → Настройки → Бизнес → Сохранённые ответы</li>
+                <li>Создать ответ: триггер «ПОДДЕРЖКА» → текст со ссылкой на бота</li>
+                <li>Альтернатива — настроить через Chatplace</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">03</div></div>
+          <div>
+            <div class="step-title">Для Telegram-канала</div>
+            <div class="step-body">
+              <ul>
+                <li>В посте добавить inline-кнопку «Открыть бота» или ссылку <code>https://t.me/your_bot</code></li>
+                <li>Кодовое слово не нужно — кнопка ведёт сразу в бот</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- БЛОК 7 -->
+    <div class="section-block">
+      <div class="section-label">Блок 7 · 10 минут</div>
+      <h2 class="section-title" style="font-size:20px">Тестирование всей цепочки</h2>
+
+      <div class="step-card" style="margin-bottom:24px">
+        <div><div class="step-num" style="font-size:13px;padding-top:4px">Тест</div></div>
+        <div>
+          <div class="step-title">Полный путь — проверь сам</div>
+          <div class="step-body">
+            <ul>
+              <li>Опубликуй сторис с кодовым словом</li>
+              <li>С другого аккаунта — напиши кодовое слово в директ</li>
+              <li>Получи автоответ со ссылкой на бота</li>
+              <li>Нажми ссылку → открой бота → нажми Start</li>
+              <li>Получи приветствие + PDF ✓</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- БЛОК 8: ДЗ -->
+    <div class="section-block">
+      <div class="section-label">Блок 8 · Домашнее задание</div>
+      <h2 class="section-title" style="font-size:20px">До Дня 3 · 19:00</h2>
+
+      <div class="checklist" style="margin-bottom:16px">
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">PDF лид-магнит создан через Claude</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Бот подключён к Chatplace, воронка из 4 сообщений настроена</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Опубликован минимум 1 пост / рилс с кодовым словом</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Воронка привела хотя бы 1 живого человека</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Скинул в чат: @username_bot + скриншот аналитики Chatplace</div>
+        </div>
+      </div>
+
+      <div class="alert" style="margin-bottom:0">
+        <strong>День 3:</strong> делаем ИИ-агента который отвечает в боте 24/7 за тебя. Не просто автоворонка — реальный ИИ-помощник который ведёт диалог, отвечает на вопросы, дожимает на продажу.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ ДЕНЬ 3 ═══ -->
+  <div id="day3" class="day-section">
+
+    <div class="section-block">
+      <div class="section-label">День 3 · 90–120 минут</div>
+      <h2 class="section-title">ИИ-агент 24/7 в Telegram</h2>
+      <p class="section-desc">Результат: работающий ИИ-агент в Chatplace — отвечает подписчикам, ведёт диалог, передаёт горячих лидов. Обучен на базе знаний в вашем стиле.</p>
+    </div>
+
+    <!-- ЗАПИСЬ -->
+    <div class="section-block">
+      <div class="section-label">Уроки · День 3</div>
+      <h2 class="section-title" style="font-size:20px">Запись эфира</h2>
+      <div class="lessons">
+        <div class="lesson-card">
+          <div class="lesson-meta">
+            <span class="lesson-num">День 3</span>
+            <span class="lesson-duration">~90 мин</span>
+          </div>
+          <div class="lesson-title">ИИ-агент 24/7 в Telegram</div>
+          <div class="lesson-desc">Создание и обучение агента в Chatplace, база знаний через Claude, связка воронка → агент → горячие лиды.</div>
+          <div class="video-placeholder">
+            <div class="vp-inner">
+              <div class="vp-icon">▶</div>
+              <div class="vp-text">Запись появится после эфира</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- СВЯЗКА -->
+    <div class="section-block">
+      <div class="alert" style="line-height:1.8">
+        <strong>Связка 3 дней:</strong><br>
+        📝 День 1 — Контент. Посты, рилсы, карусели в твоём стиле. Привлекают внимание.<br>
+        🔄 День 2 — Воронка. PDF лид-магнит + 4 сообщения по таймеру. Конвертирует подписчика в тёплого лида.<br>
+        🤖 День 3 — Агент. Отвечает на любые вопросы, дожимает, передаёт горячих лидов. Конвертирует тёплого лида в клиента.
+      </div>
+    </div>
+
+    <!-- БЛОК 0 -->
+    <div class="section-block">
+      <div class="section-label">Блок 0 · 5 минут</div>
+      <h2 class="section-title" style="font-size:20px">Технический чек-поинт</h2>
+
+      <div class="steps">
+        <div class="step-card">
+          <div><div class="step-num" style="font-size:12px;padding-top:4px">Тариф</div></div>
+          <div>
+            <div class="step-title">Тариф Chatplace</div>
+            <div class="step-body">
+              <span class="group-label">ИИ-агент работает:</span>
+              <ul>
+                <li>Полноценно — на тарифах <strong style="color:var(--white)">Unlimited</strong> или <strong style="color:var(--white)">Pro Plan</strong> с подключённым пакетом <strong style="color:var(--white)">ChatPlace ИИ</strong></li>
+                <li>Для тестирования — <strong style="color:var(--green)">бесплатно на любом тарифе</strong> (включая Free)</li>
+              </ul>
+              <div class="step-tip">Сегодня собираем агента и тестируем локально бесплатно. Когда поймёте насколько он мощный — оплатите тариф и запустите. Раньше времени деньги тратить не надо.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num" style="font-size:12px;padding-top:4px">День 2</div></div>
+          <div>
+            <div class="step-title">Воронка из Дня 2 должна работать</div>
+            <div class="step-body">
+              <ul>
+                <li>Если воронка не готова — сегодня делайте только агента, воронку допилите потом</li>
+                <li>Не пытайтесь сегодня собрать всё сразу — упустите главное</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- БЛОК 1 -->
+    <div class="section-block">
+      <div class="section-label">Блок 1 · 10 минут</div>
+      <h2 class="section-title" style="font-size:20px">Воронка vs ИИ-агент</h2>
+
+      <div class="steps">
+        <div class="step-card">
+          <div><div class="step-num" style="font-size:12px;padding-top:4px">Разница</div></div>
+          <div>
+            <div class="step-title">Чем отличается агент от воронки</div>
+            <div class="step-body" style="line-height:1.9">
+              <p style="margin-bottom:10px">Воронка — это <strong style="color:var(--white)">автомат</strong>. Фиксированные сообщения по таймеру. Если человек спросит «сколько стоит?» — воронка не услышит, продолжит свои сообщения по графику. Человек уйдёт.</p>
+              <p>ИИ-агент — это <strong style="color:var(--white)">менеджер</strong>. Слушает каждое сообщение. Понимает контекст. Отвечает по теме. Дожимает на продажу. Передаёт горячих лидов вам в Telegram.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num" style="font-size:12px;padding-top:4px">Что умеет</div></div>
+          <div>
+            <div class="step-title">Что умеет агент в Chatplace</div>
+            <div class="step-body">
+              <ul>
+                <li>Понимает текст, голосовые, кружки, изображения</li>
+                <li>Отвечает мгновенно, в течение 2–3 секунд</li>
+                <li>Помнит контекст переписки</li>
+                <li>Сохраняет имена, телефоны, email в карточку клиента</li>
+                <li>Передаёт уведомление в Telegram когда клиент готов покупать</li>
+                <li>Работает в Instagram, Telegram-бот, TikTok, Telegram Business</li>
+                <li>Отвечает на комментарии под постами и реакции на сторис (Instagram)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num" style="font-size:12px;padding-top:4px">Мозг</div></div>
+          <div>
+            <div class="step-title">Какой «мозг» у агента</div>
+            <div class="step-body">
+              <ul>
+                <li>Под капотом — <strong style="color:var(--white)">Claude Sonnet 4.5</strong> как основная модель</li>
+                <li>При перегрузке — автоматически переключается на ChatGPT-5</li>
+                <li>Не нужно подключать API, не нужно платить за токены отдельно</li>
+                <li>Платите только подписку Chatplace — всё уже встроено</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- БЛОК 2 -->
+    <div class="section-block">
+      <div class="section-label">Блок 2 · 15 минут</div>
+      <h2 class="section-title" style="font-size:20px">Создаём агента</h2>
+
+      <div class="steps">
+
+        <div class="step-card">
+          <div><div class="step-num">01</div></div>
+          <div>
+            <div class="step-title">Создание в Chatplace</div>
+            <div class="step-body">
+              <ul>
+                <li>Chatplace → <strong style="color:var(--white)">ИИ-Агент</strong> (в левом меню)</li>
+                <li>Выбрать канал: <strong style="color:var(--white)">Telegram-бот</strong> (тот же что для воронки)</li>
+                <li>Нажать <strong style="color:var(--white)">«Создать»</strong></li>
+              </ul>
+              <div class="step-tip">Агент создан, но не обучен. Теперь главное — обучить его.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">02</div></div>
+          <div>
+            <div class="step-title">Три способа обучения</div>
+            <div class="step-body">
+              <span class="group-label">Вариант 1: Сканирование Instagram/TikTok аккаунта</span>
+              <ul>
+                <li>Подходит если активный Instagram с постами и перепиской</li>
+                <li>Агент читает посты, био, переписки — создаёт базу знаний</li>
+                <li>❌ Для Telegram-бота не подходит</li>
+              </ul>
+              <span class="group-label" style="margin-top:10px">Вариант 2: Загрузка файлов <span style="color:var(--green);font-size:10px">← делаем сегодня</span></span>
+              <ul>
+                <li>PDF, DOCX, XLS — до 10 файлов, каждый до 30 МБ</li>
+                <li>Подходит для всех: и Instagram, и Telegram</li>
+                <li>Грузим: FAQ, описание продуктов, скрипты ответов</li>
+              </ul>
+              <span class="group-label" style="margin-top:10px">Вариант 3: Ввод текста вручную</span>
+              <ul>
+                <li>Пишете или диктуете голосом</li>
+                <li>Для коротких знаний или быстрого старта</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">03</div></div>
+          <div>
+            <div class="step-title">Три файла базы знаний</div>
+            <div class="step-body">
+              <p style="margin-bottom:10px;font-size:13px">Это основа. Без них агент будет общим. С ними — отвечает почти как вы. Сейчас создадим эти файлы за 10 минут через Claude.</p>
+
+              <span class="group-label">Файл 1: FAQ (часто задаваемые вопросы)</span>
+              <div class="copy-block">
+                <div class="copy-label">Структура FAQ</div>
+                <pre class="copy-pre">ВОПРОС: Сколько стоит консультация?
+ОТВЕТ: Первая консультация 40 минут — бесплатно.
+Полноценная сессия 60 минут — 5000 рублей.
+
+ВОПРОС: Как записаться?
+ОТВЕТ: Напиши в директ слово ЗАПИСЬ или нажми кнопку
+"Записаться" в боте — придёт ссылка на удобное время.
+
+ВОПРОС: Где ты работаешь? Очно или онлайн?
+ОТВЕТ: Только онлайн через Zoom. Из любой точки мира.
+
+[и так 20-50 пар вопрос-ответ]</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+
+              <span class="group-label" style="margin-top:12px">Файл 2: Описание продуктов и услуг</span>
+              <div class="copy-block">
+                <div class="copy-label">Структура описания продуктов</div>
+                <pre class="copy-pre">ПРОДУКТ 1: Индивидуальная консультация
+- Кому подходит: тревожность, выгорание, отношения
+- Длительность: 60 минут
+- Цена: 5000 рублей
+- Формат: Zoom
+- Что входит: разбор ситуации + 2-3 техники самопомощи +
+  домашнее задание
+
+ПРОДУКТ 2: Курс "Жить без тревоги"
+- 8 недель, 8 групповых встреч
+- Цена: 35000 рублей
+- Что входит: запись всех встреч, рабочая тетрадь,
+  чат поддержки, индивидуальный созвон в конце</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+
+              <span class="group-label" style="margin-top:12px">Файл 3: Скрипты типичных диалогов</span>
+              <div class="copy-block">
+                <div class="copy-label">Структура скриптов</div>
+                <pre class="copy-pre">СИТУАЦИЯ: клиент сомневается, говорит "у меня нет денег"
+СКРИПТ:
+- Сначала эмпатия: "понимаю, это важный вопрос"
+- Спросить: "что для тебя важнее — решить тревожность
+  быстрее или потратить меньше?"
+- Если важнее быстро — рассказать про индивидуальные сессии
+- Если важнее дёшево — рассказать про курс
+- Если совсем не готов — предложить бесплатную консультацию
+
+СИТУАЦИЯ: клиент спрашивает "поможет ли мне"
+СКРИПТ:
+- Уточнить: что именно беспокоит
+- Дать пример из практики (без имён клиентов)
+- Не обещать чудес — сказать честно
+- Предложить созвон чтобы разобраться предметно</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- БЛОК 3 -->
+    <div class="section-block">
+      <div class="section-label">Блок 3 · 20 минут</div>
+      <h2 class="section-title" style="font-size:20px">Создаём базу знаний через Claude</h2>
+
+      <div class="steps">
+
+        <div class="step-card">
+          <div><div class="step-num">01</div></div>
+          <div>
+            <div class="step-title">Создаём FAQ через Claude</div>
+            <div class="step-body">
+              <p style="margin-bottom:8px">Открой свой Project в Claude. Вставь промпт ниже, подставь свою нишу:</p>
+              <div class="copy-block">
+                <div class="copy-label">Промпт — создать FAQ (пример: психолог)</div>
+                <pre class="copy-pre">Создай файл FAQ для моего ИИ-агента.
+
+Тема: я психолог, специализация — тревожность и выгорание.
+Работаю онлайн через Zoom. Цены: разовая консультация 5000р,
+курс "Жить без тревоги" 35000р за 8 недель.
+
+Подумай какие вопросы клиенты задают чаще всего и сделай
+30 пар вопрос-ответ.
+
+Покрой все категории:
+- Стоимость и формат работы
+- Чем ты можешь помочь
+- Запись и расписание
+- Возражения (нет денег, не верю в психотерапию, страшно)
+- Технические вопросы (Zoom, оплата, отмена)
+- Личное (твой опыт, образование, кому помогаешь)
+
+Стиль ответов: тёплый, бережный, без давления и продажности.</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+              <div class="copy-block" style="margin-top:8px">
+                <div class="copy-label">Промпт — шаблон под свою нишу</div>
+                <pre class="copy-pre">Создай файл FAQ для моего ИИ-агента.
+
+Тема: я [ниша], специализация — [что делаешь].
+Работаю [формат]. Цены: [продукт 1 — цена], [продукт 2 — цена].
+
+Подумай какие вопросы клиенты задают чаще всего и сделай
+30 пар вопрос-ответ.
+
+Покрой все категории:
+- Стоимость и формат работы
+- Чем ты можешь помочь
+- Запись и расписание
+- Возражения (нет денег, не верю, страшно начинать)
+- Технические вопросы (как проходит, оплата, отмена)
+- Личное (твой опыт, образование, кому помогаешь)
+
+Стиль ответов: [тёплый / деловой / экспертный].</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">02</div></div>
+          <div>
+            <div class="step-title">Создаём описание продуктов</div>
+            <div class="step-body">
+              <div class="copy-block">
+                <div class="copy-label">Промпт — описание продуктов (пример: психолог)</div>
+                <pre class="copy-pre">Создай файл "Описание продуктов" для моего ИИ-агента.
+
+Мои продукты:
+1. Индивидуальная консультация — 5000р, 60 минут, Zoom
+2. Курс "Жить без тревоги" — 35000р, 8 недель групповых встреч
+3. Бесплатная диагностическая встреча — 40 минут
+
+Для каждого продукта расскажи:
+- Кому подходит
+- Что человек получит на выходе
+- Чем отличается от других моих продуктов
+- В каких ситуациях рекомендовать
+
+Стиль: ясно, по делу, без "уникальных методик".</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+              <div class="copy-block" style="margin-top:8px">
+                <div class="copy-label">Промпт — шаблон под свою нишу</div>
+                <pre class="copy-pre">Создай файл "Описание продуктов" для моего ИИ-агента.
+
+Мои продукты:
+1. [Название] — [цена], [длительность/формат]
+2. [Название] — [цена], [формат]
+3. [Бесплатный оффер — если есть]
+
+Для каждого продукта расскажи:
+- Кому подходит
+- Что человек получит на выходе
+- Чем отличается от других моих продуктов
+- В каких ситуациях рекомендовать
+
+Стиль: [тёплый / деловой / экспертный], без "уникальных методик".</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">03</div></div>
+          <div>
+            <div class="step-title">Создаём скрипты диалогов</div>
+            <div class="step-body">
+              <div class="copy-block">
+                <div class="copy-label">Промпт — скрипты диалогов (пример: психолог)</div>
+                <pre class="copy-pre">Создай файл "Скрипты диалогов" для моего ИИ-агента.
+
+Опиши как вести диалог в 8 типичных ситуациях:
+1. Клиент сомневается ("у меня нет денег")
+2. Клиент спрашивает "поможет ли мне"
+3. Клиент в кризисе прямо сейчас (паническая атака)
+4. Клиент хочет "просто посоветоваться без сессий"
+5. Клиент уже был у других психологов и разочаровался
+6. Клиент хочет работать с детским психологом (это не моя
+   специализация — нужно вежливо отказать и порекомендовать)
+7. Клиент готов записаться — нужно довести до оплаты
+8. Клиент хочет скидку
+
+Для каждой ситуации напиши:
+- Что чувствует клиент
+- Что ему отвечать пошагово
+- Чего избегать
+- Финальное действие (записаться / отправить ссылку /
+  передать оператору)</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+              <div class="copy-block" style="margin-top:8px">
+                <div class="copy-label">Промпт — шаблон под свою нишу</div>
+                <pre class="copy-pre">Создай файл "Скрипты диалогов" для моего ИИ-агента.
+
+Моя ниша: [психолог / нутрициолог / коуч / маркетолог]
+
+Опиши как вести диалог в 8 типичных ситуациях:
+1. Клиент сомневается ("у меня нет денег")
+2. Клиент спрашивает "поможет ли мне именно это"
+3. Клиент в срочной ситуации / острой боли
+4. Клиент хочет бесплатно
+5. Клиент уже пробовал других специалистов — не помогло
+6. Запрос не по моей специализации — вежливо отказать
+7. Клиент готов купить — довести до оплаты
+8. Клиент хочет скидку
+
+Для каждой ситуации:
+- Что чувствует клиент
+- Что отвечать пошагово
+- Чего избегать
+- Финальное действие</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- БЛОК 4 -->
+    <div class="section-block">
+      <div class="section-label">Блок 4 · 10 минут</div>
+      <h2 class="section-title" style="font-size:20px">Загружаем базу знаний в агента</h2>
+
+      <div class="steps">
+
+        <div class="step-card">
+          <div><div class="step-num">01</div></div>
+          <div>
+            <div class="step-title">Загрузка файлов</div>
+            <div class="step-body">
+              <ul>
+                <li>Chatplace → ИИ-Агент → раздел <strong style="color:var(--white)">«База знаний»</strong></li>
+                <li>Нажать <strong style="color:var(--white)">«Загрузить файлы»</strong> → выбрать 3 файла из Claude</li>
+                <li>Если Claude выдал текст — скопировать в .docx и загрузить</li>
+                <li>Подождать 1–3 минуты пока агент обучается</li>
+              </ul>
+              <div class="step-tip">Видите статус «Обучение»? Агент сейчас читает ваши файлы. Через минуту-две будет готово.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">02</div></div>
+          <div>
+            <div class="step-title">Проверка базы знаний</div>
+            <div class="step-body">
+              <ul>
+                <li>Раздел <strong style="color:var(--white)">«База знаний»</strong> → видишь список тем которые агент знает</li>
+                <li>Кликни на любую тему → проверь как агент будет отвечать</li>
+                <li>Если ответ не нравится → нажми редактирование → перепиши → сохрани</li>
+              </ul>
+              <div class="step-tip">Агент не просто скопировал файлы — он переработал их, выделил темы. Если что-то отвечает не так — правите прямо здесь, запоминает новый вариант.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- БЛОК 5 -->
+    <div class="section-block">
+      <div class="section-label">Блок 5 · 15 минут</div>
+      <h2 class="section-title" style="font-size:20px">Настройка поведения агента</h2>
+
+      <div class="steps">
+
+        <div class="step-card">
+          <div><div class="step-num">01</div></div>
+          <div>
+            <div class="step-title">Универсальное правило — главная настройка</div>
+            <div class="step-body">
+              <p style="margin-bottom:8px">Settings → Универсальное правило. Сюда пишем стиль общения, цели агента, табу. Это не FAQ — это инструкция как вести себя.</p>
+              <div class="copy-block">
+                <div class="copy-label">Шаблон — универсальное правило (пример: психолог Анна)</div>
+                <pre class="copy-pre">Ты ассистент психолога Анны. Твоя задача — помочь клиенту
+разобраться с его запросом и записать на бесплатную диагностику.
+
+ОБЩЕНИЕ:
+- Обращайся на "ты"
+- Тёплый, бережный, без давления
+- Короткие сообщения (2-4 предложения)
+- На русском языке
+
+ЦЕЛЬ:
+- Понять боль клиента (1-2 уточняющих вопроса)
+- Предложить подходящий продукт
+- Если клиент готов — записать на бесплатную 40-минутную
+  диагностическую встречу
+- Передать заявку Анне в Telegram
+
+СТОП-ТЕМЫ (не обсуждай):
+- Политика
+- Медицинские диагнозы (ты не врач)
+- Конкретные техники работы — отправляй на консультацию
+
+КОГДА ПЕРЕДАВАТЬ ОПЕРАТОРУ:
+- Клиент в остром кризисе (СП-мысли, острый стресс)
+- Клиент хочет записаться — отправь данные Анне
+- Клиент задаёт нестандартный вопрос на который ты не знаешь ответ</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+              <div class="copy-block" style="margin-top:8px">
+                <div class="copy-label">Шаблон — универсальное правило (под свою нишу)</div>
+                <pre class="copy-pre">Ты ассистент [имя]. Твоя задача — помочь клиенту
+разобраться с его запросом и записать на [бесплатная встреча / консультация].
+
+ОБЩЕНИЕ:
+- Обращайся на [ты / вы]
+- [Тёплый / деловой / экспертный], без давления
+- Короткие сообщения (2-4 предложения)
+- На русском языке
+
+ЦЕЛЬ:
+- Понять боль клиента (1-2 уточняющих вопроса)
+- Предложить подходящий продукт из описания продуктов
+- Если клиент готов — [записать / отправить ссылку на оплату]
+- Передать заявку [имя] в Telegram
+
+СТОП-ТЕМЫ (не обсуждай):
+- [тема 1 — не твоя специализация]
+- [тема 2]
+
+КОГДА ПЕРЕДАВАТЬ ОПЕРАТОРУ:
+- Клиент готов купить
+- Клиент в острой / кризисной ситуации
+- Вопрос на который нет ответа в базе знаний</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">02</div></div>
+          <div>
+            <div class="step-title">Уведомления в Telegram</div>
+            <div class="step-body">
+              <ul>
+                <li>Настройки → Уведомления в Telegram</li>
+                <li>Подключить свой личный Telegram</li>
+                <li>Настроить триггеры: клиент просит перезвонить / хочет купить / оставляет контакты</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">03</div></div>
+          <div>
+            <div class="step-title">Дожим — функция которая удваивает конверсию</div>
+            <div class="step-body">
+              <ul>
+                <li>Включить тумблер <strong style="color:var(--white)">«Возвращать клиентов»</strong></li>
+                <li>Если клиент перестал отвечать — агент сам через время напишет ему</li>
+                <li>Без дожима 80% клиентов отваливаются на середине</li>
+              </ul>
+              <div class="step-tip">С функцией дожима конверсия в продажу вырастает в 2 раза. Включайте обязательно.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">04</div></div>
+          <div>
+            <div class="step-title">Кнопки и логика — включить один раз</div>
+            <div class="step-body">
+              <ul>
+                <li>✅ <strong style="color:var(--white)">«Предлагать кнопки»</strong> — агент формирует кнопки в ответах («Записаться», «Узнать подробнее»)</li>
+                <li>✅ <strong style="color:var(--white)">«Учиться на ответах»</strong> — если ты напишешь клиенту сама, агент запомнит твой ответ</li>
+                <li>✅ <strong style="color:var(--white)">«Отключаться при вашем ответе»</strong> — если подключилась к чату, агент замолкает на N часов</li>
+                <li>✅ <strong style="color:var(--white)">«Приостанавливать автоматизации»</strong> — чтобы не было конфликтов с воронкой Дня 2</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- БЛОК 6 -->
+    <div class="section-block">
+      <div class="section-label">Блок 6 · 10 минут</div>
+      <h2 class="section-title" style="font-size:20px">Тестирование агента</h2>
+
+      <div class="steps">
+
+        <div class="step-card">
+          <div><div class="step-num">01</div></div>
+          <div>
+            <div class="step-title">Тестирование внутри Chatplace</div>
+            <div class="step-body">
+              <p style="margin-bottom:8px">Раздел <strong style="color:var(--white)">«Тестирование»</strong>. Прогони 10–15 вопросов — это займёт 20 минут, но критично перед запуском.</p>
+              <div class="copy-block">
+                <div class="copy-label">Вопросы для тестирования — скопируй и прогони по одному</div>
+                <pre class="copy-pre">Сколько стоит консультация?
+Как записаться?
+У меня нет денег, но очень нужна помощь
+Помогаешь ли ты с детской тревожностью?
+А ты точно поможешь?
+Что будет на первой встрече?
+Можно ли отменить запись?
+Ты работаешь очно?
+Я уже был у психолога — не помогло
+Можете сделать скидку?</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+              <p style="margin-top:8px;font-size:13px;color:var(--grey2)">Если ответ не нравится → редактирование → перепиши → сохрани. Агент запоминает.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">02</div></div>
+          <div>
+            <div class="step-title">Запуск в реальном боте</div>
+            <div class="step-body">
+              <ul>
+                <li>Главный экран ИИ-Агента → кнопка <strong style="color:var(--white)">«Запустить»</strong></li>
+                <li>С другого аккаунта написать своему боту в Telegram</li>
+                <li>Проверить как агент отвечает реально</li>
+              </ul>
+              <div class="step-tip">Готово. Агент работает 24/7. Может одновременно вести 100 диалогов. Никогда не устаёт. Передаёт вам только горячих лидов.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- БЛОК 7 -->
+    <div class="section-block">
+      <div class="section-label">Блок 7 · 10 минут</div>
+      <h2 class="section-title" style="font-size:20px">Тест полной системы</h2>
+
+      <div class="step-card" style="margin-bottom:24px">
+        <div><div class="step-num" style="font-size:12px;padding-top:4px">Тест</div></div>
+        <div>
+          <div class="step-title">Полный путь — сделай прямо сейчас</div>
+          <div class="step-body" style="line-height:2">
+            <span style="color:var(--pink)">1.</span> Постишь сторис в Instagram с кодовым словом <strong style="color:var(--white)">ПОДДЕРЖКА</strong><br>
+            <span style="color:var(--pink)">2.</span> С другого аккаунта пишешь в директ «ПОДДЕРЖКА»<br>
+            <span style="color:var(--pink)">3.</span> Получаешь автоответ → ссылку на бот<br>
+            <span style="color:var(--pink)">4.</span> В боте нажимаешь Start → попадаешь в воронку<br>
+            <span style="color:var(--pink)">5.</span> Получаешь PDF (Шаг 1 воронки)<br>
+            <span style="color:var(--pink)">6.</span> Пишешь боту произвольный вопрос — <strong style="color:var(--white)">агент перехватывает</strong>, отвечает по базе знаний в твоём стиле<br>
+            <span style="color:var(--pink)">7.</span> Агент дожимает на диагностику<br>
+            <span style="color:var(--pink)">8.</span> Когда соглашаешься — агент пишет тебе в Telegram уведомление «горячий лид» ✓
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- БЛОК 8 БОНУС: Сайт через Claude -->
+    <div class="section-block">
+      <div class="section-label">Блок 8 · Бонус · 15 минут</div>
+      <h2 class="section-title" style="font-size:20px">Создаём сайт за 30 минут через Claude</h2>
+      <p class="section-desc">Тот лендинг через который вы пришли на этот практикум — собран за час через Claude. Сайт с уроками куда вы заходите — тоже. Это не сложно.</p>
+
+      <div class="steps">
+
+        <div class="step-card">
+          <div><div class="step-num" style="font-size:12px;padding-top:4px">Зачем</div></div>
+          <div>
+            <div class="step-title">Две страницы для любого запуска</div>
+            <div class="step-body">
+              <ul>
+                <li><strong style="color:var(--white)">Страница 1: Лендинг с оплатой</strong> — туда ведут рилсы и посты, там описание и кнопки оплаты</li>
+                <li><strong style="color:var(--white)">Страница 2: Сайт с уроками</strong> — закрытый кабинет для тех кто оплатил</li>
+              </ul>
+              <div class="step-tip">Оба сайта — через Claude за час каждый. Без программистов, без дизайнеров. Бесплатно.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num" style="font-size:12px;padding-top:4px">Схема</div></div>
+          <div>
+            <div class="step-title">Связка из 3 инструментов</div>
+            <div class="step-body" style="font-size:13.5px;line-height:2">
+              <strong style="color:var(--white)">Claude</strong> → пишет код HTML-файла<br>
+              <strong style="color:var(--white)">Netlify</strong> → бесплатно хостит файл, даёт ссылку<br>
+              <strong style="color:var(--white)">GetCourse</strong> → принимает оплату, выдаёт платёжные ссылки<br><br>
+              Никакого WordPress, никаких конструкторов.
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">01</div></div>
+          <div>
+            <div class="step-title">Промпт: лендинг с оплатой</div>
+            <div class="step-body">
+              <div class="copy-block">
+                <div class="copy-label">Промпт — лендинг (заполни под себя)</div>
+                <pre class="copy-pre">Сделай мне продающий лендинг для онлайн-практикума.
+Один HTML-файл со всем кодом внутри (HTML + CSS + JS),
+готовый залить на Netlify через drag & drop.
+
+ПРОДУКТ:
+- Название: [название]
+- Формат: онлайн-практикум, [N] дней
+- Даты: [даты]
+- Для кого: [одна строка про аудиторию]
+
+БОЛИ АУДИТОРИИ (3-4 пункта):
+- [боль 1]
+- [боль 2]
+- [боль 3]
+
+ПРОГРАММА ПО ДНЯМ:
+День 1: [тема] — [3-4 буллета]
+День 2: [тема] — [3-4 буллета]
+День 3: [тема] — [3-4 буллета]
+
+ЧТО ПОЛУЧИТ УЧЕНИК:
+- [результат 1]
+- [результат 2]
+- [результат 3]
+
+ТАРИФЫ:
+БАЗОВЫЙ — [цена]₽
+- [что входит]
+
+PRO — [цена]₽
+- всё из Базового +
+- [что добавляется]
+
+ОБО МНЕ:
+[2-3 предложения]
+
+FAQ (5-6 вопросов с ответами)
+
+ДИЗАЙН:
+- Минималистичный, премиальный
+- Акцентный цвет: [hex]
+- Шрифты Inter или Manrope
+- Адаптивный (десктоп + мобайл)
+
+КНОПКИ ОПЛАТЫ:
+"Купить Базовый" → https://ССЫЛКА-BASIC
+"Купить PRO" → https://ССЫЛКА-PRO
+(ссылки заменю на свои из GetCourse)
+
+Отдай один файл index.html.</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">02</div></div>
+          <div>
+            <div class="step-title">Промпт: сайт с уроками для учеников</div>
+            <div class="step-body">
+              <div class="copy-block">
+                <div class="copy-label">Промпт — закрытый кабинет с уроками</div>
+                <pre class="copy-pre">Сделай мне закрытый сайт-кабинет с уроками практикума.
+Один HTML-файл который я залью на Netlify. Это страница
+для учеников которые уже оплатили.
+
+ПРАКТИКУМ:
+- Название: [название]
+- Количество дней: [N]
+
+СТРУКТУРА КАЖДОГО ДНЯ:
+1. Заголовок дня + описание
+2. Видео-плейсхолдер (iframe для YouTube)
+3. Программа урока (5-7 блоков)
+4. Шаблоны/промпты с кнопкой "Скопировать"
+5. Скачиваемые файлы (PDF, ZIP)
+6. Чеклист домашки (интерактивные чекбоксы)
+
+НАВИГАЦИЯ:
+- Сверху меню "День 1 / День 2 / День 3"
+- Переключение без перезагрузки страницы
+- Прогресс-бар сверху
+
+ФУНКЦИИ:
+- Кнопка "Скопировать" на шаблонах
+- Чекбоксы домашки сохраняются в localStorage
+- Подсветка текущего дня
+
+ДИЗАЙН:
+- Чистый стиль как Notion или Linear
+- Акцентный цвет: [hex]
+- Шрифт Inter
+- Светлая тема, читабельная
+
+Отдай один файл index.html.</pre>
+                <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">03</div></div>
+          <div>
+            <div class="step-title">Залить на Netlify за 1 минуту</div>
+            <div class="step-body">
+              <ul>
+                <li>Скопировали код → сохранили как <code>index.html</code></li>
+                <li>Зашли на <a href="https://app.netlify.com/drop" target="_blank">app.netlify.com/drop</a> (без регистрации)</li>
+                <li>Перетащили файл в окно браузера</li>
+                <li>Через 10 секунд — ссылка вида <code>random-name.netlify.app</code></li>
+                <li>В настройках поменять имя на красивое</li>
+              </ul>
+              <div class="step-tip">Когда нужно обновить — снова перетаскиваете обновлённый index.html на тот же проект. Ссылка остаётся та же.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div><div class="step-num">04</div></div>
+          <div>
+            <div class="step-title">Связка с GetCourse</div>
+            <div class="step-body">
+              <ul>
+                <li>GetCourse → Тренинг → Продукт → Предложение (Offer)</li>
+                <li>Скопируй ссылку вида <code>https://школа.getcourse.ru/pl/offer/[ID]</code></li>
+                <li>В коде сайта замени заглушки <code>https://ССЫЛКА-BASIC</code> и <code>https://ССЫЛКА-PRO</code> на реальные</li>
+                <li>Перезалей index.html на Netlify</li>
+              </ul>
+              <div class="step-tip">Готово. Деньги падают на счёт через GetCourse.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- БЛОК 9: Закрытие -->
+    <div class="section-block">
+      <div class="section-label">Блок 9 · Закрытие · 10 минут</div>
+      <h2 class="section-title" style="font-size:20px">Итог практикума</h2>
+      <h2 class="section-title" style="font-size:20px">Что у вас есть после 3 дней</h2>
+
+      <div class="checklist" style="margin-bottom:24px">
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Claude Project под вашу нишу — с Custom Instructions, скиллами, файлом аудитории</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Скиллы для контента: посты, рилсы, карусели, очистка от ИИ-шаблонов</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">PDF лид-магнит созданный за 30 минут через Claude</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Бот в Telegram через Chatplace с воронкой из 4 сообщений</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">ИИ-агент с базой знаний 30+ вопросов</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Связка Instagram → кодовое слово → бот → воронка → агент</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Уведомления о горячих лидах в Telegram</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="check-box"><svg class="check-icon" viewBox="0 0 12 12"><path d="M1.5 6L4.5 9L10.5 3"/></svg></div>
+          <div class="check-text">Промпты для создания лендинга и сайта с уроками</div>
+        </div>
+      </div>
+
+      <div class="card2-box" style="margin-bottom:16px">
+        <div class="section-label" style="margin-bottom:10px">Что делать дальше — два действия</div>
+        <ul style="list-style:none;padding:0;color:var(--grey2);font-size:13.5px;line-height:2">
+          <li>📝 <strong style="color:var(--white)">Контент.</strong> Каждую неделю минимум 3–5 единиц контента. Без контента воронка пустая. Используйте скиллы из Дня 1.</li>
+          <li>🤖 <strong style="color:var(--white)">Доработка агента.</strong> Каждую неделю заходите в раздел «Не отвечено» в Chatplace. Дополняйте базу. За месяц агент станет в 5 раз точнее.</li>
+        </ul>
+      </div>
+
+      <div class="card2-box" style="margin-bottom:16px;border-color:var(--pink)">
+        <div class="section-label" style="margin-bottom:10px">Наставничество — 4 недели</div>
+        <p style="color:var(--grey2);font-size:13.5px;margin-bottom:10px">Для тех у кого уже есть продукт и аудитория, нужно масштабировать продажи, готовы платить за результат.</p>
+        <ul style="list-style:none;padding:0;color:var(--grey2);font-size:13.5px;line-height:2;margin-bottom:14px">
+          <li>→ Индивидуальная стратегия запуска / масштабирования</li>
+          <li>→ Доработка воронки и агента под ваш продукт</li>
+          <li>→ Помощь с контент-стратегией</li>
+          <li>→ Прямая обратная связь каждую неделю</li>
+        </ul>
+        <p style="color:var(--white);font-size:13.5px;font-weight:600;margin-bottom:6px">40 000 ₽ за 4 недели. Для участников практикума — скидка до конца недели.</p>
+        <div class="copy-block" style="margin-top:10px">
+          <div class="copy-label">Написать в директ</div>
+          <pre class="copy-pre">НАСТАВНИЧЕСТВО</pre>
+          <button class="copy-btn" onclick="copyText(this)">Скопировать</button>
+        </div>
+      </div>
+
+      <div class="alert" style="margin-bottom:0">
+        <strong>Скидывайте результаты в чат:</strong> что получилось, первые лиды, какие проблемы решили. Читаю всё. До связи 🤝
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div>Дулма Буянтуева · AI-эксперт</div>
+    <a href="https://t.me/dulmaAi" target="_blank">Telegram @dulmaAi</a>
+  </footer>
+
+</div><!-- /wrap -->
+
+<script>
+  document.querySelectorAll('.check-icon').forEach(svg => {
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'white');
+    svg.setAttribute('stroke-width', '2');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+  });
+
+  function toggleCheck(item) {
+    item.classList.toggle('done');
+    updateProgress();
+    saveState();
+  }
+
+  function updateProgress() {
+    const items = document.querySelectorAll('#day0 .checklist-item');
+    const done = document.querySelectorAll('#day0 .checklist-item.done').length;
+    const total = items.length;
+    if (!total) return;
+    const pct = (done / total) * 100;
+    const bar = document.getElementById('progressBar');
+    const txt = document.getElementById('progressText');
+    if (bar) bar.style.width = pct + '%';
+    if (txt) txt.textContent = done + ' из ' + total;
+  }
+
+  function saveState() {
+    const states = [];
+    document.querySelectorAll('.checklist-item').forEach(item => {
+      states.push(item.classList.contains('done'));
+    });
+    try { localStorage.setItem('dulma_checklist', JSON.stringify(states)); } catch(e) {}
+  }
+
+  function loadState() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('dulma_checklist') || '[]');
+      document.querySelectorAll('.checklist-item').forEach((item, i) => {
+        if (saved[i]) item.classList.add('done');
+      });
+      updateProgress();
+    } catch(e) {}
+  }
+
+  function showDay(id, tab) {
+    if (tab && tab.classList.contains('locked')) return;
+    document.querySelectorAll('.day-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if (tab) tab.classList.add('active');
+  }
+
+
+  function downloadFile(filename, text) {
+    const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const shablonMoiProdukty = `# Мои продукты — шаблон для Claude Project
+
+> **Зачем этот файл:**
+> Claude использует его в финале каждого лид-магнита (раздел "Что дальше → CTA"), чтобы делать **конкретные** призывы к действию с триггер-словами, а не общее "пиши в директ".
+>
+> **Как пользоваться:**
+> 1. Скопируй блок ниже
+> 2. Заполни данные по каждому продукту
+> 3. Удали примеры и подсказки
+> 4. Сохрани как \`Мои продукты.md\` и загрузи в knowledge Claude Project
+>
+> **Главное:** заполняй **только активные** продукты, которые продаёшь прямо сейчас. Старые/архивные не включай — Claude начнёт их предлагать.
+
+---
+
+## ШАБЛОН — копировать и заполнить
+
+\`\`\`markdown
+# Мои продукты
+
+## Краткая карта продуктов
+
+| Продукт | Цена | Для кого | Триггер-слово |
+|---|---|---|---|
+| {Название 1} | {цена} | {кто покупатель} | {СЛОВО} |
+| {Название 2} | {цена} | {кто покупатель} | {СЛОВО} |
+| {Название 3} | {цена} | {кто покупатель} | {СЛОВО} |
+
+---
+
+## ПРОДУКТ 1: {Название продукта}
+
+**Тип:** {курс / мини-курс / сопровождение / консультация / услуга / интенсив / марафон}
+
+**Цена:** {сумма в рублях / валюта}
+
+**Длительность:** {3 дня / 1 месяц / 8 недель / разовая встреча}
+
+**Формат:** {уроки в записи / онлайн-встречи / Telegram-канал / личная работа / смешанный}
+
+### Для кого этот продукт
+{2-3 предложения о покупателе. Конкретно: на каком этапе он, что уже пробовал, что не получилось}
+
+Пример: Эксперт, у которого уже есть Telegram-канал от 1000 подписчиков, но он не знает как сделать AI-ассистента под себя. Уже смотрел бесплатные ролики, пробовал разово использовать ChatGPT, но не выстроил системную работу.
+
+### Для кого этот продукт НЕ подходит
+{1-2 предложения. Это важно — отсекает нецелевых}
+
+Пример: Не подходит тем, кто хочет полностью автоматизировать всё за неделю и больше не работать. Не подходит новичкам без блога — сначала надо собрать аудиторию.
+
+### Что человек получит на выходе
+{Конкретный результат. Не "научится", а "получит". Лучше с цифрой или артефактом.}
+
+- {Результат 1}
+- {Результат 2}
+- {Результат 3}
+
+Пример:
+- Готовый Claude Project под свою нишу
+- 12 рабочих промптов для контента и продаж
+- Структура воронки от подписчика до оплаты
+
+### Что внутри (программа/состав)
+{Краткое содержание — 5-7 пунктов максимум. Не подробный план уроков.}
+
+1. {Модуль/блок 1}
+2. {Модуль/блок 2}
+3. {Модуль/блок 3}
+
+### Главное преимущество (USP)
+{Одно предложение: чем отличается от похожих продуктов на рынке}
+
+Пример: Единственный курс на русском, где Claude настраивается под русскоязычную аудиторию с готовыми промптами для Telegram и Instagram.
+
+### Триггер-слово для CTA
+**{СЛОВО}** — пишут это слово в личку @{твой_handle}, и им приходит ссылка/инструкция/бот.
+
+Пример: АССИСТЕНТ → @dulmabuyantueva
+
+### Логичные мосты от лид-магнитов
+{Какие темы лид-магнитов органично ведут на этот продукт. Это поможет Claude правильно встраивать CTA в финал.}
+
+Пример: 
+- Темы про настройку AI-ассистента
+- Темы про автоматизацию контента
+- Темы про экономию времени на рутине
+
+---
+
+## ПРОДУКТ 2: {Название продукта}
+
+[Повторить ту же структуру]
+
+---
+
+## ПРОДУКТ 3: {Название продукта}
+
+[Повторить ту же структуру]
+
+---
+
+## Лестница продуктов (опционально, но полезно)
+
+Если у тебя несколько продуктов — укажи **в каком порядке** клиент по ним идёт. Claude будет учитывать это при выборе CTA в зависимости от сложности темы лид-магнита.
+
+Пример:
+1. **Бесплатный лид-магнит** → знакомство
+2. **Мини-продукт за 990 руб** → первый платёж
+3. **Курс за 15 000 руб** → основной продукт
+4. **Сопровождение за 50 000 руб** → топ для готовых платить
+
+**Правило для CTA в лид-магнитах:**
+- Простая тема → веди на ближайшую ступень после лид-магнита
+- Сложная/глубокая тема → можно вести на основной продукт
+- Не предлагай топовый продукт после простого лид-магнита (читатель не готов)
+
+---
+
+## Что Claude должен делать с этим файлом
+
+1. В разделе "Что дальше → CTA" финала лид-магнита **выбирать один продукт**, который логично связан с темой
+2. Использовать **триггер-слово** в CTA
+3. Не предлагать сразу несколько продуктов — выбирается один
+4. Связь между темой лид-магнита и продуктом должна быть **очевидной**, а не натянутой
+\`\`\`
+
+---
+
+## Заполненный пример (для понимания)
+
+Пример для условной ниши — нутрициолог:
+
+\`\`\`markdown
+# Мои продукты
+
+## Краткая карта продуктов
+
+| Продукт | Цена | Для кого | Триггер-слово |
+|---|---|---|---|
+| Гайд "План питания за час" | 990 руб | Те кто впервые меняет питание | ГАЙД |
+| Курс "Питание без диет" | 12 000 руб | Женщины 30-45, которые перепробовали диеты | КУРС |
+| Сопровождение 1:1 | 45 000 руб/мес | Те у кого есть медицинские особенности | СОПРОВОЖДЕНИЕ |
+
+---
+
+## ПРОДУКТ 1: Гайд "План питания за час"
+
+**Тип:** мини-продукт, PDF + видеоинструкция
+**Цена:** 990 руб
+**Длительность:** разовый продукт, доступ навсегда
+**Формат:** PDF + 3 видео по 15 минут
+
+### Для кого
+Женщина 30-45, которая уже пробовала несколько диет, но всегда срывалась. Хочет научиться составлять рацион сама, без подсчёта калорий и без ограничений.
+
+### Для кого НЕ подходит
+Не подходит тем, у кого есть медицинские диагнозы (диабет, гастрит и т.д.) — для них нужно индивидуальное сопровождение. Не подходит тем, кто хочет похудеть за месяц — это не про быстрые результаты.
+
+### Что получит на выходе
+- Готовый шаблон плана питания на неделю
+- Список из 50 быстрых полезных блюд
+- Принцип "тарелки", который работает всю жизнь
+
+### Что внутри
+1. Принцип здоровой тарелки (видео 1)
+2. Как составить меню на неделю за 15 минут (видео 2)
+3. Что делать когда нет времени готовить (видео 3)
+4. PDF с шаблонами и списком блюд
+
+### Главное преимущество
+Никаких подсчётов калорий и взвешивания еды. Только принцип, который работает в любой ситуации — командировка, отпуск, праздники.
+
+### Триггер-слово
+**ГАЙД** → @anna_nutri
+
+### Логичные мосты от лид-магнитов
+- Темы про начало изменения питания
+- Темы про "с чего начать"
+- Темы про быстрые рецепты и базовое меню
+
+---
+
+## ПРОДУКТ 2: Курс "Питание без диет"
+
+**Тип:** онлайн-курс
+**Цена:** 12 000 руб
+**Длительность:** 6 недель
+**Формат:** уроки в записи + Telegram-чат с куратором + 2 онлайн-разбора
+
+### Для кого
+Женщины 30-45, которые перепробовали 5+ диет, всегда возвращали вес и устали от ограничений. Хотят системный подход, чтобы есть нормально и при этом чувствовать себя хорошо.
+
+### Для кого НЕ подходит
+Не подходит тем, кто ищет "минус 10 кг за месяц". Курс про долгосрочную перестройку, а не про экспресс-результат.
+
+### Что получит на выходе
+- Понимание своих пищевых привычек и триггеров переедания
+- Рацион, который не нужно "выдерживать" — он встроен в жизнь
+- Уверенность в выборе еды без чувства вины
+
+### Что внутри
+1. Психология еды и причины срывов
+2. Базовая нутрициология без зубрёжки
+3. Как составить рацион под свой ритм
+4. Работа с эмоциональным перееданием
+5. Питание в особых ситуациях (праздники, поездки, стресс)
+6. Как удержать результат
+
+### Главное преимущество
+Единственный курс на русском от практикующего нутрициолога с медицинским образованием, где не считают калории и не запрещают сладкое.
+
+### Триггер-слово
+**КУРС** → @anna_nutri
+
+### Логичные мосты от лид-магнитов
+- Темы про срывы и психологию еды
+- Темы про "почему не получается похудеть"
+- Темы про эмоциональное переедание
+
+---
+
+## ПРОДУКТ 3: Сопровождение 1:1
+
+**Тип:** индивидуальная работа
+**Цена:** 45 000 руб/мес
+**Длительность:** минимум 2 месяца
+**Формат:** 4 встречи в Zoom + чат + персональный план
+
+### Для кого
+Женщины с медицинскими особенностями (гастрит, СПКЯ, инсулинорезистентность, аутоиммунные) или сложными запросами, которым нужен индивидуальный подход.
+
+### Для кого НЕ подходит
+Не подходит для общего "хочу похудеть" — для этого есть курс. Сопровождение нужно когда есть конкретные ограничения по здоровью.
+
+### Что получит на выходе
+- Индивидуальный план питания с учётом анализов
+- Решение конкретной медицинской задачи через питание
+- Работающий рацион, согласованный с врачом
+
+### Что внутри
+1. Анализ анализов и анамнеза
+2. Персональный план питания
+3. Корректировки каждые 2 недели
+4. Поддержка в чате между встречами
+
+### Главное преимущество
+Работаю в связке с врачами, не противоречу медицинским рекомендациям. 12 лет практики, 200+ кейсов с медицинскими особенностями.
+
+### Триггер-слово
+**СОПРОВОЖДЕНИЕ** → @anna_nutri
+
+### Логичные мосты от лид-магнитов
+- Темы про конкретные диагнозы (СПКЯ, гастрит и т.д.)
+- Темы про анализы и здоровье
+- НЕ вести из общих лид-магнитов про "начать питаться правильно"
+
+---
+
+## Лестница продуктов
+
+1. Бесплатный лид-магнит → знакомство
+2. Гайд за 990 руб → первый платёж, проверка качества
+3. Курс за 12 000 руб → основной продукт
+4. Сопровождение 45 000 руб/мес → для тех у кого медицинские особенности
+\`\`\`
+
+---
+
+## Типичные ошибки при заполнении
+
+**1. Размытое "Для кого"**
+❌ "Для всех женщин которые хотят питаться правильно"
+✅ "Женщины 30-45 которые перепробовали 5+ диет и всегда возвращали вес"
+
+**2. Триггер-слово, которое сложно запомнить**
+❌ "Напишите 'хочу гайд по питанию'"
+✅ "Напишите ГАЙД"
+
+Триггер должно быть **одно короткое слово в верхнем регистре**.
+
+**3. Все триггер-слова одинаковые**
+❌ КУПИТЬ / ЗАПИСАТЬСЯ / ПОДРОБНОСТИ для всех продуктов
+✅ Каждый продукт = своё уникальное слово (ГАЙД, КУРС, СОПРОВОЖДЕНИЕ)
+
+Это нужно чтобы понимать в боте/чате какой именно продукт интересен.
+
+**4. Не указали "для кого НЕ подходит"**
+Без этого Claude может вести нецелевых читателей и портить конверсию. Этот пункт обязателен.
+
+**5. Нет связи между темой и продуктом**
+Если в "Логичных мостах" не указано — Claude будет натягивать любой продукт на любую тему. Это убивает CTA.
+
+---
+
+## Если у тебя только один продукт
+
+Это нормально. Просто заполни одну карточку и пропусти "Лестницу продуктов".
+
+Один проработанный продукт лучше трёх размытых.
+
+---
+
+## Когда обновлять файл
+
+- Запустила новый продукт → добавила карточку
+- Изменила цену → обновила
+- Закрыла продукт → удалила (не оставляй "архивные")
+- Изменила триггер-слово → обновила везде
+
+**Раз в месяц проверяй файл.** Claude использует то что в нём написано буквально — устаревшая инфа = устаревшие CTA.
+`;
+
+  const standartLidMagnita = `# Стандарт лид-магнита
+
+Структурный шаблон для всех лид-магнитов Дулмы Буянтуевой. Используется как референс при создании любого нового PDF-лид-магнита.
+
+---
+
+## Структура из 7 блоков
+
+### 1. Обложка
+
+- Название с **глаголом результата** ("собрать", "настроить", "запустить", "написать")
+- Имя автора + @handle
+- Фирменный чёрно-жёлтый стиль
+
+**Тест названия:** если в нём нет глагола результата — переписать.
+
+❌ "Гайд по нейросетям для экспертов"
+✅ "Как за 30 минут собрать AI-ассистента, который отвечает в директе вместо тебя"
+
+---
+
+### 2. Кому это (1 страница)
+
+- **3 пункта** "это для тебя если..."
+- **1 пункт** "это НЕ для тебя если..."
+
+Цель — отсечь нецелевого читателя на старте и закрепить попадание у целевого.
+
+**Пример:**
+
+> **Это для тебя если:**
+> - Ты эксперт/коуч и тратишь больше 2 часов в день на ответы в директе
+> - Уже знаком с Claude или ChatGPT, но не настраивал ассистента под себя
+> - Хочешь конкретную инструкцию, а не теорию про "будущее AI"
+>
+> **Это НЕ для тебя если:**
+> - Ищешь волшебную кнопку, которая всё сделает без твоего участия
+
+---
+
+### 3. Проблема (1 страница)
+
+- Личный кейс автора **или** клиента
+- Цифра/факт, показывающий масштаб проблемы
+
+Не теория. Не "по статистике 67% экспертов...". Конкретная история: "Я тратила 3 часа в день на ответы в директе, пока не..."
+
+**Структура:**
+1. Ситуация до (1-2 предложения)
+2. Цифра/последствие (1 предложение)
+3. Что изменилось после решения (1 предложение, без раскрытия как)
+
+---
+
+### 4. Решение — пошагово (5-8 страниц)
+
+Основное мясо лид-магнита.
+
+**Формат каждого шага:**
+- Подзаголовок (что делаем)
+- Скриншот **или** промпт **или** схема
+- 2-3 предложения объяснения — что и зачем
+- Если нужно — 1 предупреждение "осторожно: тут часто ошибаются"
+
+**Запрещено:**
+- "Давайте разберём подробнее..."
+- "Важно понимать что..."
+- "В этой главе мы рассмотрим..."
+- Длинные абзацы теории без действия
+
+**Маркеры в тексте:**
+- \`[СКРИНШОТ: что показать]\` — место для скриншота при вёрстке PDF
+- \`[ГОТОВЫЙ ПРОМПТ — копировать]\` — блок с промптом
+
+---
+
+### 5. Готовый артефакт (1-2 страницы)
+
+Минимум **один** из:
+- Готовый промпт, который можно скопировать
+- Шаблон (структура поста, схема воронки, чек-лист настройки)
+- Ссылка на готовый файл (Make-сценарий, Claude Project, Notion-шаблон)
+
+**Без артефакта это не лид-магнит, а статья.**
+
+Артефакт оформляется визуально отдельно — рамка, жёлтый акцент, пометка "СКОПИРОВАТЬ И ИСПОЛЬЗОВАТЬ".
+
+---
+
+### 6. Частые ошибки (опционально, 1 страница)
+
+3-5 ошибок, которые автор реально видит у учеников/клиентов. Не выдуманные.
+
+**Формат каждой ошибки:**
+- Что делают неправильно
+- Почему это не работает
+- Как правильно (1 строка)
+
+Этот блок усиливает ощущение экспертности и закрывает возражения "у меня не получится".
+
+---
+
+### 7. Что дальше → CTA (1 страница)
+
+- **Логичный мост** к платному продукту автора
+- **Конкретный CTA** с триггер-словом
+
+❌ Слабо: "Понравилось? Подписывайся на телеграм"
+
+✅ Сильно: "Этот промпт — один из 12 в моём курсе 'Claude-ассистент за 3 дня'. Там же — готовая Claude Project структура, разборы и сопровождение. Напиши мне в Telegram слово **АССИСТЕНТ** → @dulmabuyantueva"
+
+**Принцип CTA:**
+Лид-магнит должен оставлять ощущение **"это супер, а полная версия должна быть огонь"** — не "я уже всё узнал, спасибо".
+
+---
+
+## 5 критериев сильного лид-магнита
+
+Прогоняй каждую тему через эти критерии **до** начала работы.
+
+### 1. Решает ОДНУ конкретную проблему
+
+❌ Слабо: "Гайд по нейросетям для экспертов"
+✅ Сильно: "Как за 30 минут собрать AI-помощника для ответов в директе"
+
+**Тест:** в названии есть глагол результата — да/нет?
+
+### 2. Содержит готовый артефакт, а не только текст
+
+Промпт / шаблон / чек-лист / ссылка на готовый файл. Без артефакта — это статья в блог, не лид-магнит.
+
+### 3. Объём 5-15 страниц, не больше
+
+| Блок | Страниц |
+|---|---|
+| Обложка + кому это + проблема | 2-3 |
+| Решение пошагово | 5-8 |
+| Артефакт | 1-2 |
+| Ошибки + CTA | 1-2 |
+| **Итого** | **9-15** |
+
+Если получается 30 страниц — попытка продать ценность объёмом. Аудитория не дочитает.
+
+### 4. CTA встроен в логику, а не приклеен
+
+Последний раздел органически подводит к платному продукту. Не "кстати, у меня есть курс" в конце.
+
+### 5. Личный опыт, а не общая теория
+
+В каждом разделе — кейс автора, цифра автора, пример автора. Это то, что нельзя скопировать у конкурентов и что нельзя получить из ютуб-транскрипции.
+
+---
+
+## Стоп-лист (никогда не использовать)
+
+**Формулировки-маркеры слабого текста:**
+- "Искусственный интеллект меняет мир"
+- "В современном мире..."
+- "Важно понимать, что..."
+- "Давайте разберём подробнее"
+- "В этой главе мы рассмотрим"
+- "Как известно..."
+- "Не секрет, что..."
+
+**Структурные ошибки:**
+- Списки "100 промптов / 50 нейросетей / 30 советов" — сигнал халтуры
+- Главы "что такое нейросети" — аудитория уже знает
+- Скриншоты из ютуб-видео других авторов — выглядит как компиляция
+- Дисклеймеры про AI без необходимости
+- Объём ради объёма
+
+---
+
+## Пропорции источников информации
+
+При сборе материала для лид-магнита соблюдать пропорции:
+
+- **60%** — личный опыт автора и кейсы клиентов
+- **20%** — внешние источники (ютуб-транскрипты, статьи) — только факты, цифры, конкретные приёмы
+- **20%** — техническая точность (документация Claude, Make, n8n, ChatPlace)
+
+**Из ютуб-транскриптов извлекать только:**
+- Конкретные цифры и факты
+- Технические приёмы (как именно настраивается)
+- Названия инструментов и фич
+
+**Из ютуб-транскриптов НЕ брать:**
+- Формулировки спикера дословно
+- Мысли и мнения
+- Структуру повествования
+`;
+
+  function copyText(btn) {
+    const pre = btn.closest('.copy-block').querySelector('.copy-pre');
+    navigator.clipboard.writeText(pre.textContent).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = '✓ Скопировано';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  loadState();
+</script>
+</body>
+</html>
